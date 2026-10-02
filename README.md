@@ -1,241 +1,120 @@
 # KelasKosong
 
-## Deskripsi Masalah
+KelasKosong adalah aplikasi web untuk membantu mahasiswa menemukan dan memesan ruang kampus yang sesuai dengan kebutuhan mereka. Pengguna dapat mencari berdasarkan gedung, kapasitas, waktu, tipe ruang, dan fasilitas, lalu melihat apakah ruang tersedia untuk seluruh rentang waktu yang dipilih.
 
-Di lingkungan kampus, mahasiswa sering membutuhkan tempat untuk belajar, mengerjakan tugas kelompok, berdiskusi, melakukan kegiatan organisasi, atau menggunakan fasilitas tertentu.
+Dokumen ini menjelaskan tujuan dan ruang lingkup produk. Rancangan teknis lebih lengkap ada di [Architecture.md](Architecture.md).
 
-Namun, informasi mengenai ketersediaan fasilitas kampus sering kali tidak mudah ditemukan. Mahasiswa dapat mengetahui bahwa sebuah ruangan "tersedia" hanya setelah datang langsung ke lokasi atau bertanya kepada pihak lain.
+## Masalah yang ingin diselesaikan
 
-Di sisi lain, beberapa ruangan dan fasilitas kampus sebenarnya memiliki slot waktu kosong yang tidak digunakan secara optimal.
+Mahasiswa sering baru mengetahui sebuah ruang kosong setelah datang langsung atau bertanya melalui grup. Pada saat yang sama, slot ruang kampus dapat tidak terpakai atau digunakan tanpa koordinasi yang jelas.
 
-Masalah yang ingin diselesaikan oleh KelasKosong adalah:
+KelasKosong menyatukan informasi ruang dan reservasi agar mahasiswa dapat merencanakan belajar, diskusi kelompok, atau kegiatan organisasi sebelum menuju lokasi. Aplikasi ini mengelola informasi dan jadwal; MVP tidak terhubung dengan sistem reservasi resmi kampus atau sensor okupansi.
 
-> Bagaimana membantu mahasiswa menemukan dan menggunakan fasilitas kampus yang sedang atau akan kosong tanpa harus mencari secara manual?
+## Pengguna
 
-KelasKosong menyediakan informasi ketersediaan fasilitas secara terpusat sehingga mahasiswa dapat menemukan ruang yang sesuai berdasarkan lokasi, waktu, kapasitas, dan jenis fasilitas.
+- **Mahasiswa** mencari ruang, membuat dan mengelola reservasi miliknya, serta melihat riwayat penggunaan.
+- **Pengelola fasilitas** memasukkan dan memperbarui data ruang serta membantu menangani reservasi untuk kebutuhan operasional.
+- **Pengunjung** dapat menjelajahi katalog; login diperlukan untuk membuat reservasi.
 
-Aplikasi juga memungkinkan pengguna yang selesai menggunakan ruangan lebih awal untuk memberi tahu pengguna lain bahwa ruangan tersebut sudah tersedia.
+## Manfaat
 
----
+### Untuk mahasiswa
 
-## Profil Target Pengguna
+- Mengetahui pilihan ruang sebelum datang ke kampus.
+- Menemukan ruang berdasarkan waktu, kapasitas, gedung, dan fasilitas.
+- Mengurangi waktu mencari ruang serta ketergantungan pada informasi grup chat.
+- Memberi tahu pengguna lain ketika selesai menggunakan ruang lebih awal.
 
-### Pengguna Utama
+### Untuk kampus
 
-Mahasiswa aktif yang:
+- Membantu pemanfaatan ruang yang tersedia.
+- Menyediakan informasi reservasi yang lebih terkoordinasi.
+- Memberi dasar data penggunaan untuk evaluasi operasional.
 
-* Membutuhkan ruangan untuk belajar atau mengerjakan tugas.
-* Sering melakukan kerja kelompok.
-* Mengikuti organisasi atau kegiatan kampus.
-* Membutuhkan fasilitas kampus tertentu.
-* Kesulitan mengetahui ruangan yang sedang tersedia.
+## Fitur MVP
 
-### Pengguna Sekunder
+1. **Registrasi dan login** agar reservasi terhubung ke akun pemesan.
+2. **Katalog dan detail ruang** yang menampilkan nama, gedung/lantai, kapasitas, tipe, deskripsi, fasilitas, dan ketersediaan.
+3. **Pencarian dan filter** berdasarkan tanggal, jam mulai/selesai, kapasitas, gedung, tipe, serta fasilitas.
+4. **Reservasi ruang** untuk rentang waktu tertentu.
+5. **Pencegahan bentrok** supaya dua reservasi aktif tidak menggunakan ruang yang sama pada waktu tumpang tindih.
+6. **Pembatalan reservasi** sesuai aturan pembatalan yang ditetapkan.
+7. **Selesai lebih awal** bagi pemesan yang sedang menggunakan ruang. Waktu akhir aktual dicatat agar slot setelahnya dapat ditawarkan.
+8. **Riwayat reservasi** yang akan datang dan sebelumnya.
+9. **Pengelolaan data ruang** oleh pengelola.
 
-Pengelola fasilitas kampus atau organisasi mahasiswa yang membutuhkan informasi mengenai penggunaan fasilitas.
+### Cara membaca status ruang
 
----
+Untuk tanggal dan jam yang dipilih, ruang ditandai **Tersedia** jika tidak ada reservasi aktif yang bertabrakan dengan keseluruhan rentang tersebut. **Sedang digunakan** menunjukkan reservasi yang berlangsung pada waktu sekarang. **Akan tersedia** memberi konteks kapan reservasi berjalan berakhir; status ini sendiri tidak menjamin seluruh slot yang dicari tersedia.
 
-## Manfaat Aplikasi
+Status dihitung dari data reservasi, bukan disimpan sebagai status manual yang dapat kedaluwarsa. Pembaruan tampil setelah perubahan tersimpan dan data dimuat ulang. Pembaruan live lintas perangkat belum termasuk MVP.
 
-### Untuk Mahasiswa
+## Di luar MVP
 
-* Menghemat waktu dalam mencari ruangan.
-* Mengetahui fasilitas yang tersedia sebelum datang ke lokasi.
-* Mempermudah pencarian ruangan berdasarkan kapasitas dan fasilitas.
-* Mengurangi ketergantungan pada informasi dari grup chat.
-* Memanfaatkan ruangan kosong secara lebih optimal.
+- Integrasi dengan sistem akademik atau jadwal kuliah resmi kampus.
+- Integrasi kartu mahasiswa, NFC, smart lock, atau akses pintu otomatis.
+- Sensor IoT atau computer vision untuk mendeteksi keberadaan orang.
+- Pembayaran fasilitas.
+- Push notification atau pembaruan live menggunakan WebSocket.
+- Sinkronisasi kalender eksternal.
+- Rekomendasi AI dan prediksi penggunaan dengan machine learning.
+- Aplikasi mobile native dan administrasi kampus berskala penuh.
 
-### Untuk Kampus
+## Alur utama
 
-* Meningkatkan utilisasi fasilitas.
-* Memberikan gambaran mengenai pola penggunaan fasilitas.
-* Mengurangi penggunaan ruangan yang tidak terkoordinasi.
-* Membantu digitalisasi pengelolaan fasilitas.
+1. Mahasiswa memilih tanggal, jam, kapasitas, dan filter lain.
+2. Aplikasi menampilkan ruang yang memenuhi kebutuhan dan tersedia untuk rentang itu.
+3. Mahasiswa login bila belum masuk, lalu memilih ruang dan mengirim reservasi.
+4. Server memeriksa ulang jadwal sebelum menyimpan agar slot yang baru saja dipesan pengguna lain tidak ikut terjual.
+5. Mahasiswa melihat konfirmasi dan reservasi di halaman riwayat.
+6. Saat penggunaan berlangsung, pemesan dapat memilih **Selesai lebih awal**. Ruang menjadi tersedia untuk waktu setelah waktu selesai aktual.
 
----
+## Batasan produk
 
-## Daftar Fitur Inti
+- Daftar ruang dimasukkan dan dikelola secara manual oleh pengelola.
+- Informasi ketersediaan bersumber dari reservasi KelasKosong dan bukan sensor kondisi fisik ruangan.
+- Pengelola menetapkan jam operasional dan aturan pembatalan yang digunakan kampus.
+- “Tersedia” berarti tidak ada reservasi tercatat untuk slot itu; pengguna tetap perlu mengikuti aturan penggunaan fasilitas kampus.
+- Semua waktu ditampilkan dalam zona waktu kampus yang dikonfigurasi.
 
-### 1. Login dan Registrasi
+## Kriteria keberhasilan
 
-Pengguna dapat membuat akun dan masuk ke aplikasi.
+MVP memenuhi tujuannya ketika pengguna dapat:
 
-Data dasar:
+- Membuat akun, masuk, dan melihat katalog ruang.
+- Menemukan ruang berdasarkan slot, kapasitas, dan fasilitas.
+- Melihat detail ruang dan status untuk waktu yang dipilih.
+- Membuat reservasi tanpa menyebabkan bentrok dengan reservasi lain.
+- Melihat, membatalkan sesuai aturan, dan meninjau riwayat reservasinya.
+- Mengakhiri penggunaan lebih awal dan melihat ketersediaan diperbarui.
 
-* Nama
-* Email
-* Password
-* Status pengguna
+Kualitas data juga harus terjaga: waktu reservasi tersimpan dengan benar, ruang nonaktif tidak dapat dipesan, dan pengguna tidak dapat mengubah reservasi milik pengguna lain.
 
----
+## Rancangan teknis
 
-### 2. Daftar Fasilitas
+Produk dirancang sebagai aplikasi mobile React Native dengan Expo dan TypeScript, serta backend REST API (Node.js/Express), PostgreSQL, dan Prisma. Prototype pertemuan 3 adalah aplikasi mobile yang dijalankan melalui Expo. Prototype ini memakai data contoh lokal dan belum terhubung ke backend/database. Rincian model data, API, aturan waktu, dan keamanan tersedia di [Architecture.md](Architecture.md).
 
-Pengguna dapat melihat daftar fasilitas yang tersedia.
+> Prototype mobile mensimulasikan alur pencarian dan reservasi dengan data contoh. Reservasi hanya hidup selama aplikasi berjalan dan tidak mewakili ketersediaan kampus yang sesungguhnya. Backend produksi belum tersedia.
 
-Informasi fasilitas:
+## Menjalankan prototype mobile
 
-* Nama ruangan
-* Gedung
-* Kapasitas
-* Jenis ruangan
-* Fasilitas yang tersedia
-* Status ketersediaan
+Penjelasan layar, alur demo, struktur project, dan batas prototype: [penjelasanprototype.md](penjelasanprototype.md).
 
-Contoh:
+Persyaratan: Node.js LTS, npm, serta Expo Go pada perangkat atau Android Emulator. Dari terminal:
 
-```
-Ruang Diskusi 302
-Gedung A
-Kapasitas: 8 orang
+1. Masuk ke folder aplikasi dan pasang dependency (jika belum tersedia):
 
-Fasilitas:
-✓ Whiteboard
-✓ AC
-✓ Wi-Fi
-```
+   ```bash
+   cd mobile
+   npm install
+   ```
 
----
+2. Jalankan Expo:
 
-### 3. Pencarian dan Filter
+   ```bash
+   npx expo start
+   ```
 
-Pengguna dapat mencari fasilitas berdasarkan:
+3. Pindai QR code dengan Expo Go, atau tekan `a` untuk membuka Android Emulator.
 
-* Waktu
-* Kapasitas
-* Gedung
-* Jenis fasilitas
-* Status tersedia
-
-Contoh:
-
-> "Cari ruangan untuk 6 orang pukul 15.00."
-
-Aplikasi menampilkan ruangan yang sesuai.
-
----
-
-### 4. Reservasi Ruangan
-
-Pengguna dapat memilih ruangan dan melakukan reservasi pada waktu tertentu.
-
-Informasi reservasi:
-
-* Nama ruangan
-* Tanggal
-* Waktu mulai
-* Waktu selesai
-* Jumlah pengguna
-* Status reservasi
-
----
-
-### 5. Status Ketersediaan Real-Time Sederhana
-
-Ruangan memiliki status:
-
-* 🟢 Tersedia
-* 🟡 Akan tersedia
-* 🔴 Sedang digunakan
-
-Status dapat diperbarui berdasarkan reservasi dan laporan pengguna.
-
----
-
-### 6. "Selesai Lebih Cepat"
-
-Pengguna yang sedang menggunakan ruangan dapat melaporkan bahwa mereka telah selesai lebih awal.
-
-Contoh:
-
-Reservasi:
-
-```
-14.00–16.00
-```
-
-Namun kelompok selesai pukul:
-
-```
-15.10
-```
-
-Pengguna dapat menekan:
-
-> "Saya selesai lebih awal"
-
-Status ruangan kemudian berubah menjadi tersedia.
-
----
-
-### 7. Pemberitahuan
-
-Pengguna dapat menerima pemberitahuan ketika ruangan yang diinginkan menjadi tersedia.
-
-Contoh:
-
-> 🔔 Ruang Diskusi 302 sekarang tersedia.
-
----
-
-### 8. Riwayat Reservasi
-
-Pengguna dapat melihat:
-
-* Reservasi yang akan datang.
-* Reservasi yang sedang berjalan.
-* Reservasi sebelumnya.
-* Status reservasi.
-
----
-
-## Fitur yang Tidak Dikerjakan
-
-Untuk menjaga project tetap realistis dalam 12 pertemuan, fitur berikut tidak termasuk dalam versi awal:
-
-* Integrasi dengan sistem akademik universitas.
-* Integrasi dengan kartu mahasiswa/NFC.
-* Pembayaran fasilitas.
-* Smart lock atau pembukaan pintu otomatis.
-* Integrasi IoT untuk mendeteksi keberadaan manusia.
-* Computer vision untuk menghitung jumlah orang di ruangan.
-* Sinkronisasi dengan seluruh kampus secara otomatis.
-* Sistem rekomendasi berbasis AI.
-* Prediksi penggunaan ruangan menggunakan machine learning.
-* Integrasi kalender eksternal seperti Google Calendar.
-* Sistem administrasi kampus berskala penuh.
-
----
-
-## Kriteria Aplikasi Dinyatakan Berhasil
-
-Aplikasi dinyatakan berhasil apabila pengguna dapat menyelesaikan alur berikut:
-
-1. Membuat akun atau login.
-2. Melihat daftar fasilitas kampus.
-3. Mencari fasilitas berdasarkan waktu dan kapasitas.
-4. Melihat detail fasilitas.
-5. Melakukan reservasi.
-6. Melihat status reservasi.
-7. Membatalkan reservasi.
-8. Melaporkan bahwa penggunaan ruangan telah selesai lebih awal.
-9. Melihat ruangan yang tersedia setelah pembaruan status.
-10. Melihat riwayat reservasi.
-
-### Indikator keberhasilan
-
-Project dianggap berhasil apabila:
-
-* Seluruh alur utama dapat dilakukan tanpa error.
-* Data reservasi tersimpan dengan benar.
-* Dua pengguna tidak dapat melakukan reservasi pada slot waktu yang sama.
-* Status fasilitas berubah sesuai kondisi reservasi.
-* Pengguna dapat menemukan fasilitas yang sesuai melalui fitur pencarian/filter.
-* Aplikasi dapat digunakan secara konsisten pada perangkat mobile.
-
-### Batasan MVP
-
-Versi pertama aplikasi menggunakan data fasilitas yang telah dimasukkan ke dalam sistem dan belum terintegrasi dengan sistem reservasi resmi universitas.
-
-Tujuan MVP adalah membuktikan bahwa konsep **pencarian, penggunaan, dan redistribusi slot kosong fasilitas kampus** dapat berjalan dengan baik.
+Di prototype, tekan pilihan jumlah orang/waktu untuk mengganti nilai, pilih tipe ruang, simpan ruang dengan ikon hati, lalu pesan ruang untuk mencoba konfirmasi. Tab **Reservasi**, **Tersimpan**, dan **Profil** memakai navigasi native. Tanggal, akun, dan katalog masih berupa contoh.
