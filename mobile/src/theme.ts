@@ -1,0 +1,31 @@
+export function getThemeColors(isDark: boolean) {
+  return isDark ? {
+    background: '#111812',
+    surface: '#1b241d',
+    surfaceSecondary: '#222e25',
+    border: '#344338',
+    text: '#edf2eb',
+    muted: '#b0bcb0',
+    subtle: '#94a293',
+    primary: '#9ac99e',
+    button: '#28583f',
+    primarySoft: '#293a2d',
+    input: '#202b22',
+    overlay: '#080c09dd',
+    danger: '#ee9b91',
+  } : {
+    background: '#f7f8f4',
+    surface: '#ffffff',
+    surfaceSecondary: '#f3f5f1',
+    border: '#e4e9e0',
+    text: '#253329',
+    muted: '#858f85',
+    subtle: '#91a087',
+    primary: '#28583f',
+    button: '#28583f',
+    primarySoft: '#edf3e9',
+    input: '#ffffff',
+    overlay: '#13201988',
+    danger: '#ad544a',
+  };
+}
