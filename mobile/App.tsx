@@ -1,9 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-<<<<<<< HEAD
-import { useMemo, useState } from 'react';
-=======
 import { useState } from 'react';
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
 import {
   Alert,
   Modal,
@@ -14,10 +10,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-<<<<<<< HEAD
-import { rooms, Room } from './src/features/rooms/data';
-import { usePrototypeStore } from './src/state/PrototypeStore';
-=======
 import { Room } from './src/features/rooms/data';
 import { RoomSearchCriteria } from './src/features/room-search/data/roomSearchRepository';
 import { RoomSearchStateView } from './src/features/room-search/components/RoomSearchStateView';
@@ -26,22 +18,11 @@ import { BookingForm } from './src/features/bookings/components/BookingForm';
 import { useBooking } from './src/features/bookings/state/BookingProvider';
 import { usePrototypeStore } from './src/state/PrototypeStore';
 import { getThemeColors } from './src/theme';
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
 
 const green = '#28583f';
 const muted = '#7a867c';
 
 function SmallLabel({ children }: { children: string }) {
-<<<<<<< HEAD
-  return <Text style={styles.smallLabel}>{children}</Text>;
-}
-
-function Choice({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
-  return (
-    <Pressable style={styles.choice} onPress={onPress}>
-      <Text style={styles.choiceLabel}>{label}</Text>
-      <Text style={styles.choiceValue}>{value}  <Text style={styles.down}>⌄</Text></Text>
-=======
   const { isDark } = usePrototypeStore();
   const theme = getThemeColors(isDark);
   return <Text style={[styles.smallLabel, { color: theme.subtle }]}>{children}</Text>;
@@ -54,18 +35,10 @@ function Choice({ label, value, onPress }: { label: string; value: string; onPre
     <Pressable style={[styles.choice, { backgroundColor: theme.input, borderColor: theme.border }]} onPress={onPress}>
       <Text style={[styles.choiceLabel, { color: theme.subtle }]}>{label}</Text>
       <Text style={[styles.choiceValue, { color: theme.text }]}>{value}  <Text style={[styles.down, { color: theme.muted }]}>⌄</Text></Text>
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
     </Pressable>
   );
 }
 
-<<<<<<< HEAD
-function RoomCard({ room, onBook, saved, onSave }: {
-  room: Room; onBook: (room: Room) => void; saved: boolean; onSave: (id: number) => void;
-}) {
-  return (
-    <View style={styles.roomCard}>
-=======
 function RoomCard({ room, onBook, saved, onSave, timeRange }: {
   room: Room; onBook: (room: Room) => void; saved: boolean; onSave: (id: number) => void; timeRange: string;
 }) {
@@ -73,7 +46,6 @@ function RoomCard({ room, onBook, saved, onSave, timeRange }: {
   const theme = getThemeColors(isDark);
   return (
     <View style={[styles.roomCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
       <View style={[styles.roomArt, { backgroundColor: room.color }]}>
         <View style={styles.artSun} />
         <View style={styles.artWindow}><View style={styles.windowLine} /></View>
@@ -88,18 +60,6 @@ function RoomCard({ room, onBook, saved, onSave, timeRange }: {
       </View>
       <View style={styles.roomDetails}>
         <View style={styles.roomTitleLine}>
-<<<<<<< HEAD
-          <Text numberOfLines={1} style={styles.roomTitle}>{room.name}</Text>
-          <Text style={styles.available}>● Tersedia</Text>
-        </View>
-        <Text style={styles.location}>⌖  {room.building} · {room.floor}</Text>
-        <View style={styles.roomInfoLine}>
-          <Text style={styles.roomInfo}>♙  Maks. {room.capacity} orang</Text>
-          <Text style={styles.roomInfo}>◷  10:00–12:00</Text>
-        </View>
-        <View style={styles.amenities}>
-          {room.amenities.map((item) => <Text key={item} style={styles.amenity}>{item}</Text>)}
-=======
           <Text numberOfLines={1} style={[styles.roomTitle, { color: theme.text }]}>{room.name}</Text>
           <Text style={[styles.available, { color: theme.primary, backgroundColor: theme.primarySoft }]}>● Tersedia</Text>
         </View>
@@ -110,7 +70,6 @@ function RoomCard({ room, onBook, saved, onSave, timeRange }: {
         </View>
         <View style={styles.amenities}>
           {room.amenities.map((item) => <Text key={item} style={[styles.amenity, { color: theme.muted, backgroundColor: theme.surfaceSecondary }]}>{item}</Text>)}
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
         </View>
         <Pressable style={styles.bookButton} onPress={() => onBook(room)}>
           <Text style={styles.bookButtonText}>Pesan ruang  →</Text>
@@ -121,37 +80,6 @@ function RoomCard({ room, onBook, saved, onSave, timeRange }: {
 }
 
 export default function App() {
-<<<<<<< HEAD
-  const [people, setPeople] = useState(4);
-  const [startHour, setStartHour] = useState(10);
-  const [endHour, setEndHour] = useState(12);
-  const [activeType, setActiveType] = useState('Semua');
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const { savedRoomIds, toggleSaved, addBooking } = usePrototypeStore();
-
-  const visibleRooms = useMemo(() => rooms.filter((room) =>
-    room.capacity >= people && (activeType === 'Semua' || room.type === activeType)), [people, activeType]);
-
-  const choosePeople = () => setPeople((current) => current === 4 ? 6 : current === 6 ? 8 : 4);
-  const chooseStart = () => setStartHour((current) => current >= 15 ? 9 : current + 2);
-  const chooseEnd = () => setEndHour((current) => current >= 17 ? startHour + 1 : current + 2);
-  const confirmBooking = () => {
-    if (!selectedRoom) return;
-    addBooking(selectedRoom.id);
-    Alert.alert('Reservasi berhasil', `${selectedRoom.name} sudah masuk ke Reservasi saya.`);
-    setSelectedRoom(null);
-  };
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
-      <View style={styles.topBar}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandMark}><Text style={styles.brandGlyph}>⌂</Text></View>
-          <Text style={styles.brand}>Kelas<Text style={styles.brandLight}>Kosong</Text></Text>
-        </View>
-        <Pressable style={styles.notification} onPress={() => Alert.alert('Notifikasi', 'Belum ada notifikasi baru.')}>
-=======
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const { savedRoomIds, toggleSaved, isDark, userProfile } = usePrototypeStore();
   const { state: searchState, search, retry } = useRoomSearch();
@@ -189,26 +117,11 @@ export default function App() {
           <Text style={[styles.brand, { color: theme.text }]}>Kelas<Text style={styles.brandLight}>Kosong</Text></Text>
         </View>
         <Pressable style={[styles.notification, { backgroundColor: theme.surfaceSecondary }]} onPress={() => Alert.alert('Notifikasi', 'Belum ada notifikasi baru.')}>
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
           <Text style={styles.bell}>♧</Text><View style={styles.notificationDot} />
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-<<<<<<< HEAD
-        <View style={styles.campusPill}><Text style={styles.campusIcon}>✳</Text><Text style={styles.campusName}>UNIVERSITAS NUSANTARA</Text><Text style={styles.campusArrow}>⌄</Text></View>
-        <View style={styles.hero}>
-          <Text style={styles.eyebrow}>RUANG KAMPUS, JADI LEBIH DEKAT</Text>
-          <Text style={styles.heading}>Ruang yang pas,{ '\n' }<Text style={styles.headingAccent}>ada di dekatmu.</Text></Text>
-          <Text style={styles.subtitle}>Cari tempat nyaman untuk belajar, berdiskusi,{ '\n' }dan berkolaborasi di kampus.</Text>
-          <View style={styles.heroDecoration}><View style={styles.heroSun} /><Text style={styles.heroBuilding}>▥</Text><Text style={styles.heroPlant}>♧</Text></View>
-        </View>
-
-        <View style={styles.searchPanel}>
-          <Text style={styles.panelTitle}>Cari ruang untukmu</Text>
-          <View style={styles.choiceRow}>
-            <Choice label="TANGGAL" value="2 Okt 2026" onPress={() => Alert.alert('Pilih tanggal', 'Pemilih tanggal akan tersambung pada tahap implementasi berikutnya.')} />
-=======
         <View style={[styles.campusPill, { backgroundColor: theme.primarySoft }]}><Text style={[styles.campusIcon, { color: theme.primary }]}>✳</Text><Text style={[styles.campusName, { color: theme.primary }]}>PRADITA UNIVERSITY</Text><Text style={[styles.campusArrow, { color: theme.primary }]}>⌄</Text></View>
         <View style={styles.hero}>
           <Text style={[styles.eyebrow, { color: theme.subtle }]}>RUANG KAMPUS, JADI LEBIH DEKAT</Text>
@@ -221,7 +134,6 @@ export default function App() {
           <Text style={[styles.panelTitle, { color: theme.text }]}>Cari ruang untukmu</Text>
           <View style={styles.choiceRow}>
             <Choice label="TANGGAL" value={criteria.date} onPress={() => Alert.alert('Tanggal reservasi', 'Tanggal dapat disesuaikan pada formulir booking.')} />
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
             <Choice label="JUMLAH ORANG" value={`${people} orang`} onPress={choosePeople} />
           </View>
           <View style={styles.choiceRow}>
@@ -229,40 +141,6 @@ export default function App() {
             <Choice label="SELESAI" value={`${String(endHour).padStart(2, '0')}:00`} onPress={chooseEnd} />
           </View>
           <Pressable style={styles.searchButton} onPress={() => {
-<<<<<<< HEAD
-            if (endHour <= startHour) { setEndHour(startHour + 1); return; }
-            Alert.alert('Pencarian diperbarui', `Menampilkan ruang untuk ${people} orang.`);
-          }}><Text style={styles.searchIcon}>⌕</Text><Text style={styles.searchButtonText}>Cari ruang tersedia</Text></Pressable>
-          <Text style={styles.freeNote}>✓  Reservasi gratis untuk mahasiswa</Text>
-        </View>
-
-        <View style={styles.resultsHeader}>
-          <View><SmallLabel>PILIHAN UNTUKMU</SmallLabel><Text style={styles.sectionTitle}>Ruang tersedia <Text style={styles.resultCount}>{visibleRooms.length}</Text></Text></View>
-          <Pressable onPress={() => Alert.alert('Urutkan', 'Ruang ditampilkan berdasarkan kecocokan.')}><Text style={styles.sortButton}>Sesuai  ⌄</Text></Pressable>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {['Semua', 'Diskusi', 'Belajar', 'Kelas'].map((type) => <Pressable key={type} onPress={() => setActiveType(type)} style={[styles.filterChip, activeType === type && styles.filterChipActive]}><Text style={[styles.filterText, activeType === type && styles.filterTextActive]}>{type === 'Semua' ? 'Semua ruang' : `Ruang ${type.toLowerCase()}`}</Text></Pressable>)}
-        </ScrollView>
-
-        {visibleRooms.map((room) => (
-          <RoomCard key={room.id} room={room} onBook={setSelectedRoom} saved={savedRoomIds.includes(room.id)} onSave={toggleSaved} />
-        ))}
-        <Text style={styles.disclaimer}>Ketersediaan pada prototype ini menggunakan data contoh.</Text>
-      </ScrollView>
-
-      <Modal transparent animationType="fade" visible={selectedRoom !== null} onRequestClose={() => setSelectedRoom(null)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Pressable style={styles.closeModal} onPress={() => setSelectedRoom(null)}><Text style={styles.closeText}>×</Text></Pressable>
-            <View style={styles.modalCheck}><Text style={styles.modalCheckText}>✓</Text></View>
-            <SmallLabel>KONFIRMASI RESERVASI</SmallLabel>
-            <Text style={styles.modalTitle}>Pesan ruang ini?</Text>
-            <Text style={styles.modalRoom}>{selectedRoom?.name}</Text>
-            <Text style={styles.modalDetails}>{selectedRoom?.building} · {selectedRoom?.floor} · {people} orang</Text>
-            <Text style={styles.modalDetails}>{String(startHour).padStart(2, '0')}:00 – {String(endHour).padStart(2, '0')}:00 · 2 Oktober 2026</Text>
-            <Pressable style={styles.searchButton} onPress={confirmBooking}><Text style={styles.searchButtonText}>Konfirmasi reservasi  →</Text></Pressable>
-            <Text style={styles.modalFootnote}>Prototype: reservasi hanya tersimpan di sesi aplikasi ini.</Text>
-=======
             if (endHour <= startHour) return;
             void search();
           }}><Text style={styles.searchIcon}>⌕</Text><Text style={styles.searchButtonText}>Cari ruang tersedia</Text></Pressable>
@@ -299,7 +177,6 @@ export default function App() {
                 void search();
               }}
             />}
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
           </View>
         </View>
       </Modal>

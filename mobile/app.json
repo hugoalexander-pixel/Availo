@@ -23,9 +23,6 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-<<<<<<< HEAD
-      "expo-router"
-=======
       "expo-router",
       [
         "expo-image-picker",
@@ -34,7 +31,6 @@
           "microphonePermission": false
         }
       ]
->>>>>>> e3751ce (docs: Membuat dan menambahkan penjelasan prototype KelasKosong)
     ],
     "experiments": {
       "typedRoutes": true
