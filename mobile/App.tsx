@@ -2,7 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -47,21 +49,27 @@ function RoomCard({ room, onBook, saved, onSave, timeRange }: {
   return (
     <View style={[styles.roomCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <View style={[styles.roomArt, { backgroundColor: room.color }]}>
-        <View style={styles.artSun} />
-        <View style={styles.artWindow}><View style={styles.windowLine} /></View>
-        <View style={styles.artTable} />
-        <View style={styles.artLegOne} />
-        <View style={styles.artLegTwo} />
-        <View style={styles.artPlant}><Text style={styles.artPlantText}>♧</Text></View>
-        <View style={styles.typeTag}><Text style={styles.typeTagText}>{room.mark}  {room.type}</Text></View>
-        <Pressable style={styles.saveButton} onPress={() => onSave(room.id)} accessibilityLabel="Simpan ruang">
+        <View style={styles.artBackdropCircle} />
+        <View style={styles.roomTypeBadge}>
+          <Text style={styles.roomTypeIcon}>{room.mark}</Text>
+          <Text style={styles.roomTypeText}>{room.type}</Text>
+        </View>
+        <Pressable
+          style={styles.saveButton}
+          onPress={() => onSave(room.id)}
+          accessibilityLabel="Simpan ruang"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <Text style={[styles.saveIcon, saved && styles.savedIcon]}>{saved ? '♥' : '♡'}</Text>
         </Pressable>
       </View>
       <View style={styles.roomDetails}>
         <View style={styles.roomTitleLine}>
           <Text numberOfLines={1} style={[styles.roomTitle, { color: theme.text }]}>{room.name}</Text>
-          <Text style={[styles.available, { color: theme.primary, backgroundColor: theme.primarySoft }]}>● Tersedia</Text>
+          <View style={[styles.statusPill, { backgroundColor: theme.primarySoft }]}>
+            <View style={[styles.statusDot, { backgroundColor: theme.primary }]} />
+            <Text style={[styles.available, { color: theme.primary }]}>Tersedia</Text>
+          </View>
         </View>
         <Text style={[styles.location, { color: theme.muted }]}>⌖  {room.building} · {room.floor}</Text>
         <View style={styles.roomInfoLine}>
@@ -69,7 +77,11 @@ function RoomCard({ room, onBook, saved, onSave, timeRange }: {
           <Text style={[styles.roomInfo, { color: theme.muted }]}>◷  {timeRange}</Text>
         </View>
         <View style={styles.amenities}>
-          {room.amenities.map((item) => <Text key={item} style={[styles.amenity, { color: theme.muted, backgroundColor: theme.surfaceSecondary }]}>{item}</Text>)}
+          {room.amenities.map((item) => (
+            <Text key={item} style={[styles.amenity, { color: theme.muted, backgroundColor: theme.surfaceSecondary }]}>
+              {item}
+            </Text>
+          ))}
         </View>
         <Pressable style={styles.bookButton} onPress={() => onBook(room)}>
           <Text style={styles.bookButtonText}>Pesan ruang  →</Text>
@@ -164,9 +176,19 @@ export default function App() {
       </ScrollView>
 
       <Modal transparent animationType="fade" visible={selectedRoom !== null} onRequestClose={() => setSelectedRoom(null)}>
-        <View style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}
+        >
           <View style={[styles.modalCard, { backgroundColor: theme.surface }]}>
-            <Pressable style={styles.closeModal} onPress={() => setSelectedRoom(null)}><Text style={styles.closeText}>×</Text></Pressable>
+            <Pressable
+              style={[styles.closeModal, { backgroundColor: isDark ? '#263328' : '#edf2ea' }]}
+              onPress={() => setSelectedRoom(null)}
+              accessibilityLabel="Tutup dialog"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={[styles.closeText, { color: theme.muted }]}>✕</Text>
+            </Pressable>
             {selectedRoom && <BookingForm
               room={selectedRoom}
               userId={userProfile?.email ?? ''}
@@ -178,7 +200,7 @@ export default function App() {
               }}
             />}
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -186,15 +208,268 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#f7f8f4' },
-  topBar: { height: 54, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#edf0e9' },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 }, brandMark: { width: 30, height: 30, borderRadius: 9, backgroundColor: green, alignItems: 'center', justifyContent: 'center' }, brandGlyph: { color: '#fff', fontSize: 20 }, brand: { color: '#192820', fontSize: 18, fontWeight: '800', letterSpacing: -0.6 }, brandLight: { color: '#789178', fontWeight: '500' },
-  notification: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f7f8f4' }, bell: { color: green, fontSize: 18 }, notificationDot: { position: 'absolute', width: 6, height: 6, borderRadius: 3, backgroundColor: '#e5a35d', top: 8, right: 8 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 26 }, campusPill: { marginTop: 16, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 20, paddingVertical: 7, paddingHorizontal: 10, backgroundColor: '#edf3e9' }, campusIcon: { color: green, fontSize: 13 }, campusName: { color: '#647b61', fontSize: 9, letterSpacing: 0.6, fontWeight: '700' }, campusArrow: { color: '#647b61', fontSize: 13, marginLeft: 5 },
-  hero: { paddingTop: 24, paddingBottom: 23, position: 'relative' }, eyebrow: { fontSize: 8, color: '#758a72', letterSpacing: 1.1, fontWeight: '700' }, heading: { marginTop: 11, color: '#192820', fontSize: 32, lineHeight: 36, letterSpacing: -1.1, fontWeight: '800' }, headingAccent: { color: '#648263' }, subtitle: { marginTop: 8, color: '#7f897f', fontSize: 11, lineHeight: 17 }, heroDecoration: { position: 'absolute', right: -13, bottom: 19, width: 108, height: 102, borderTopLeftRadius: 60, borderTopRightRadius: 60, backgroundColor: '#eef2e7', overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end' }, heroSun: { position: 'absolute', right: 13, top: 13, width: 30, height: 30, borderRadius: 15, backgroundColor: '#f1d6a9' }, heroBuilding: { color: '#839b7e', fontSize: 63, lineHeight: 78, marginBottom: -7 }, heroPlant: { position: 'absolute', right: 3, bottom: 3, color: '#567a5a', fontSize: 29 },
-  searchPanel: { padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#e8ece5', backgroundColor: '#fff' }, panelTitle: { color: '#243529', fontWeight: '700', fontSize: 13, marginBottom: 10 }, choiceRow: { flexDirection: 'row', gap: 8, marginBottom: 8 }, choice: { flex: 1, minHeight: 51, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 7, borderWidth: 1, borderColor: '#e9ede6', justifyContent: 'center' }, choiceLabel: { color: '#9aa29a', fontSize: 8, letterSpacing: 0.7, fontWeight: '700' }, choiceValue: { marginTop: 4, color: '#354237', fontSize: 11, fontWeight: '600' }, down: { color: '#809181' }, searchButton: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 7, backgroundColor: green, marginTop: 3 }, searchIcon: { color: '#fff', fontSize: 20 }, searchButtonText: { color: '#fff', fontSize: 11, fontWeight: '700' }, freeNote: { marginTop: 10, color: '#8b958b', fontSize: 9, textAlign: 'center' },
-  resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 }, smallLabel: { color: '#91a087', fontSize: 8, letterSpacing: 1, fontWeight: '700' }, sectionTitle: { marginTop: 5, color: '#202d23', fontSize: 18, fontWeight: '700', letterSpacing: -0.5 }, resultCount: { color: '#5b7859', backgroundColor: '#eaf1e7', overflow: 'hidden', borderRadius: 10, fontSize: 10, paddingHorizontal: 7, paddingVertical: 3 }, sortButton: { color: '#687569', fontSize: 9, borderWidth: 1, borderColor: '#e6eae2', backgroundColor: '#fff', borderRadius: 6, paddingHorizontal: 9, paddingVertical: 7 }, filterRow: { gap: 7, paddingVertical: 13 }, filterChip: { borderWidth: 1, borderColor: '#e5e9e2', backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 }, filterChipActive: { backgroundColor: '#eaf2e8', borderColor: '#eaf2e8' }, filterText: { fontSize: 9, color: '#788278' }, filterTextActive: { color: '#31593a', fontWeight: '700' },
-  roomCard: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e8ebe5', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }, roomArt: { height: 116, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, artSun: { position: 'absolute', top: 14, right: 43, width: 31, height: 31, borderRadius: 16, backgroundColor: '#f3d8ae' }, artWindow: { position: 'absolute', top: 24, width: 96, height: 46, borderWidth: 5, borderColor: '#80957c', backgroundColor: '#f8f5e9', alignItems: 'center', justifyContent: 'center' }, windowLine: { width: 4, height: 46, backgroundColor: '#bdcbb7' }, artTable: { position: 'absolute', bottom: 31, width: 126, height: 12, borderRadius: 7, backgroundColor: '#ab805b' }, artLegOne: { position: 'absolute', bottom: 8, left: '37%', width: 6, height: 26, backgroundColor: '#96704f', transform: [{ rotate: '4deg' }] }, artLegTwo: { position: 'absolute', bottom: 8, right: '37%', width: 6, height: 26, backgroundColor: '#96704f', transform: [{ rotate: '-4deg' }] }, artPlant: { position: 'absolute', right: 22, bottom: 18 }, artPlantText: { fontSize: 27, color: '#668366' }, typeTag: { position: 'absolute', left: 10, top: 10, backgroundColor: '#ffffffed', borderRadius: 15, paddingHorizontal: 8, paddingVertical: 5 }, typeTagText: { color: '#587358', fontSize: 8, fontWeight: '700' }, saveButton: { position: 'absolute', right: 10, top: 9, width: 27, height: 27, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffffed' }, saveIcon: { color: '#667563', fontSize: 18, lineHeight: 21 }, savedIcon: { color: '#cf6d61' },
-  roomDetails: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 }, roomTitleLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 5 }, roomTitle: { flexShrink: 1, color: '#253329', fontWeight: '700', fontSize: 12 }, available: { color: '#4f8052', backgroundColor: '#eff6ec', overflow: 'hidden', borderRadius: 12, fontSize: 8, paddingHorizontal: 6, paddingVertical: 4 }, location: { color: '#8a9389', marginTop: 5, fontSize: 9 }, roomInfoLine: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f0f2ee', paddingVertical: 9, marginTop: 2 }, roomInfo: { color: '#778177', fontSize: 9 }, amenities: { flexDirection: 'row', gap: 5, paddingTop: 8 }, amenity: { color: '#737f72', backgroundColor: '#f5f6f3', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 4, fontSize: 8 }, bookButton: { height: 34, alignItems: 'center', justifyContent: 'center', borderRadius: 5, backgroundColor: green, marginTop: 10 }, bookButtonText: { color: '#fff', fontWeight: '700', fontSize: 10 },
-  empty: { paddingVertical: 30, alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#e8ebe5' }, emptyIcon: { color: '#83a080', fontSize: 28 }, emptyTitle: { marginTop: 8, color: '#354239', fontWeight: '700', fontSize: 13 }, emptyCopy: { marginTop: 5, color: muted, fontSize: 10, textAlign: 'center', paddingHorizontal: 18 }, disclaimer: { marginTop: 6, marginBottom: 12, color: '#9aa198', fontSize: 9, textAlign: 'center' },
-  modalBackdrop: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#13201988' }, modalCard: { width: '100%', maxWidth: 400, padding: 24, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center' }, closeModal: { position: 'absolute', top: 9, right: 13, zIndex: 1 }, closeText: { color: '#879087', fontSize: 26 }, modalCheck: { width: 42, height: 42, borderRadius: 22, backgroundColor: '#eaf3e8', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }, modalCheckText: { color: '#3c7047', fontSize: 20 }, modalTitle: { color: '#253329', fontSize: 20, fontWeight: '700', marginTop: 7 }, modalRoom: { color: '#354237', fontWeight: '700', fontSize: 12, marginTop: 14 }, modalDetails: { color: muted, fontSize: 10, marginTop: 5 }, modalFootnote: { color: '#9ba39a', fontSize: 8, marginTop: 12, textAlign: 'center' },
+  topBar: {
+    height: 56,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#edf0e9',
+  },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  brandMark: { width: 32, height: 32, borderRadius: 10, backgroundColor: green, alignItems: 'center', justifyContent: 'center' },
+  brandGlyph: { color: '#fff', fontSize: 20 },
+  brand: { color: '#192820', fontSize: 18, fontWeight: '800', letterSpacing: -0.5 },
+  brandLight: { color: '#789178', fontWeight: '500' },
+  notification: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f7f8f4' },
+  bell: { color: green, fontSize: 18 },
+  notificationDot: { position: 'absolute', width: 7, height: 7, borderRadius: 4, backgroundColor: '#e5a35d', top: 8, right: 8 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 28 },
+  campusPill: {
+    marginTop: 16,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderRadius: 20,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    backgroundColor: '#edf3e9',
+  },
+  campusIcon: { color: green, fontSize: 13 },
+  campusName: { color: '#647b61', fontSize: 11, letterSpacing: 0.6, fontWeight: '700' },
+  campusArrow: { color: '#647b61', fontSize: 13, marginLeft: 4 },
+  hero: { paddingTop: 20, paddingBottom: 20, position: 'relative' },
+  eyebrow: { fontSize: 11, color: '#758a72', letterSpacing: 1, fontWeight: '700' },
+  heading: { marginTop: 8, color: '#192820', fontSize: 28, lineHeight: 34, letterSpacing: -0.8, fontWeight: '800' },
+  headingAccent: { color: '#648263' },
+  subtitle: { marginTop: 8, color: '#7f897f', fontSize: 13, lineHeight: 19 },
+  heroDecoration: {
+    position: 'absolute',
+    right: -10,
+    bottom: 12,
+    width: 96,
+    height: 90,
+    borderTopLeftRadius: 48,
+    borderTopRightRadius: 48,
+    backgroundColor: '#eef2e7',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  heroSun: { position: 'absolute', right: 12, top: 12, width: 26, height: 26, borderRadius: 13, backgroundColor: '#f1d6a9' },
+  heroBuilding: { color: '#839b7e', fontSize: 52, lineHeight: 68, marginBottom: -6 },
+  heroPlant: { position: 'absolute', right: 4, bottom: 2, color: '#567a5a', fontSize: 24 },
+  searchPanel: { padding: 16, borderRadius: 14, borderWidth: 1, borderColor: '#e8ece5', backgroundColor: '#fff', gap: 10 },
+  panelTitle: { color: '#243529', fontWeight: '700', fontSize: 14, marginBottom: 2 },
+  choiceRow: { flexDirection: 'row', gap: 10 },
+  choice: {
+    flex: 1,
+    minHeight: 54,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: '#e9ede6',
+    justifyContent: 'center',
+  },
+  choiceLabel: { color: '#9aa29a', fontSize: 10, letterSpacing: 0.7, fontWeight: '700' },
+  choiceValue: { marginTop: 4, color: '#354237', fontSize: 13, fontWeight: '600' },
+  down: { color: '#809181' },
+  searchButton: {
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 10,
+    backgroundColor: green,
+    marginTop: 4,
+  },
+  searchIcon: { color: '#fff', fontSize: 18 },
+  searchButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  freeNote: { marginTop: 4, color: '#8b958b', fontSize: 11, textAlign: 'center' },
+  resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 },
+  smallLabel: { color: '#91a087', fontSize: 10, letterSpacing: 1, fontWeight: '700' },
+  sectionTitle: { marginTop: 4, color: '#202d23', fontSize: 19, fontWeight: '800', letterSpacing: -0.4 },
+  resultCount: {
+    color: '#5b7859',
+    backgroundColor: '#eaf1e7',
+    overflow: 'hidden',
+    borderRadius: 10,
+    fontSize: 11,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    fontWeight: '700',
+  },
+  sortButton: {
+    color: '#687569',
+    fontSize: 11,
+    borderWidth: 1,
+    borderColor: '#e6eae2',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontWeight: '600',
+  },
+  filterRow: { gap: 8, paddingVertical: 12 },
+  filterChip: {
+    borderWidth: 1,
+    borderColor: '#e5e9e2',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  filterChipActive: { backgroundColor: '#eaf2e8', borderColor: '#eaf2e8' },
+  filterText: { fontSize: 12, color: '#788278', fontWeight: '500' },
+  filterTextActive: { color: '#31593a', fontWeight: '700' },
+  roomCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e8ebe5',
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 14,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+  },
+  roomArt: {
+    height: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  artBackdropCircle: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    right: -20,
+    top: -30,
+  },
+  roomTypeBadge: {
+    position: 'absolute',
+    left: 12,
+    top: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  roomTypeIcon: { fontSize: 13, color: '#37593c' },
+  roomTypeText: { color: '#37593c', fontSize: 11, fontWeight: '700' },
+  saveButton: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+  },
+  saveIcon: { color: '#667563', fontSize: 17, lineHeight: 20 },
+  savedIcon: { color: '#cf6d61' },
+  roomDetails: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14 },
+  roomTitleLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  roomTitle: { flexShrink: 1, color: '#253329', fontWeight: '700', fontSize: 15 },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  available: { fontWeight: '700', fontSize: 10 },
+  location: { color: '#8a9389', marginTop: 4, fontSize: 12 },
+  roomInfoLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f2ee',
+    paddingVertical: 8,
+    marginTop: 2,
+  },
+  roomInfo: { color: '#778177', fontSize: 12 },
+  amenities: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingTop: 10 },
+  amenity: {
+    color: '#737f72',
+    backgroundColor: '#f5f6f3',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  bookButton: {
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    backgroundColor: green,
+    marginTop: 12,
+  },
+  bookButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  empty: { paddingVertical: 32, alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e8ebe5' },
+  emptyIcon: { color: '#83a080', fontSize: 32 },
+  emptyTitle: { marginTop: 8, color: '#354239', fontWeight: '700', fontSize: 14 },
+  emptyCopy: { marginTop: 4, color: muted, fontSize: 12, textAlign: 'center', paddingHorizontal: 20 },
+  disclaimer: { marginTop: 8, marginBottom: 14, color: '#9aa198', fontSize: 11, textAlign: 'center' },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(15, 25, 18, 0.65)',
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    padding: 22,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  closeModal: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeText: {
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 16,
+  },
+  modalCheck: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#eaf3e8', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  modalCheckText: { color: '#3c7047', fontSize: 20 },
+  modalTitle: { color: '#253329', fontSize: 20, fontWeight: '700', marginTop: 8 },
+  modalRoom: { color: '#354237', fontWeight: '700', fontSize: 13, marginTop: 12 },
+  modalDetails: { color: muted, fontSize: 11, marginTop: 4 },
+  modalFootnote: { color: '#9ba39a', fontSize: 9, marginTop: 12, textAlign: 'center' },
 });

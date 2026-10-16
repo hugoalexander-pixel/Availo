@@ -1,0 +1,13 @@
+# Auto detect text files and perform LF normalization on commit
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted to native line endings on checkout
+*.ts text
+*.tsx text
+*.js text
+*.json text
+*.md text
+*.html text
+*.css text
+*.yml text
+*.yaml text

@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MAHASISWA
+  PENGELOLA
+}
+
+enum FacilityType {
+  RUANG_KELAS
+  RUANG_DISKUSI
+  LABORATORIUM
+  AULA
+  RUANG_RAPAT
+}
+
+enum ReservationStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EARLY_ENDED
+}
+
+enum NotificationType {
+  FACILITY_AVAILABLE
+  RESERVATION_REMINDER
+  RESERVATION_CANCELLED
+}
+
+model User {
+  Id            Int            @id @default(autoincrement())
+  Name          String
+  Email         String         @unique
+  Password      String
+  Role          Role           @default(MAHASISWA)
+  CreatedAt     DateTime       @default(now())
+  UpdatedAt     DateTime       @updatedAt
+  Reservations  Reservation[]
+  Notifications Notification[]
+  Watches       FacilityWatch[]
+}
+
+model Building {
+  Id          Int        @id @default(autoincrement())
+  Name        String
+  Code        String     @unique
+  Description String?
+  CreatedAt   DateTime   @default(now())
+  UpdatedAt   DateTime   @updatedAt
+  Facilities  Facility[]
+}
+
+model Facility {
+  Id           Int               @id @default(autoincrement())
+  BuildingId   Int
+  Name         String
+  Type         FacilityType
+  Capacity     Int
+  Floor        Int
+  Description  String?
+  ImageUrl     String?
+  CreatedAt    DateTime          @default(now())
+  UpdatedAt    DateTime          @updatedAt
+  Building     Building          @relation(fields: [BuildingId], references: [Id], onDelete: Cascade)
+  Amenities    FacilityAmenity[]
+  Reservations Reservation[]
+  Notifications Notification[]
+  Watches      FacilityWatch[]
+}
+
+model Amenity {
+  Id         Int               @id @default(autoincrement())
+  Name       String            @unique
+  Icon       String?
+  CreatedAt  DateTime          @default(now())
+  UpdatedAt  DateTime          @updatedAt
+  Facilities FacilityAmenity[]
+}
+
+model FacilityAmenity {
+  Id         Int      @id @default(autoincrement())
+  FacilityId Int
+  AmenityId  Int
+  Facility   Facility @relation(fields: [FacilityId], references: [Id], onDelete: Cascade)
+  Amenity    Amenity  @relation(fields: [AmenityId], references: [Id], onDelete: Cascade)
+
+  @@unique([FacilityId, AmenityId])
+}
+
+model Reservation {
+  Id            Int               @id @default(autoincrement())
+  UserId        Int
+  FacilityId    Int
+  Date          DateTime          @db.Date
+  StartTime     DateTime
+  EndTime       DateTime
+  ActualEndTime DateTime?
+  PartySize     Int
+  Purpose       String?
+  Status        ReservationStatus @default(UPCOMING)
+  CreatedAt     DateTime          @default(now())
+  UpdatedAt     DateTime          @updatedAt
+  User          User              @relation(fields: [UserId], references: [Id], onDelete: Cascade)
+  Facility      Facility          @relation(fields: [FacilityId], references: [Id], onDelete: Cascade)
+}
+
+model Notification {
+  Id         Int              @id @default(autoincrement())
+  UserId     Int
+  FacilityId Int
+  Message    String
+  Type       NotificationType
+  IsRead     Boolean          @default(false)
+  CreatedAt  DateTime         @default(now())
+  UpdatedAt  DateTime         @updatedAt
+  User       User             @relation(fields: [UserId], references: [Id], onDelete: Cascade)
+  Facility   Facility         @relation(fields: [FacilityId], references: [Id], onDelete: Cascade)
+}
+
+model FacilityWatch {
+  Id         Int      @id @default(autoincrement())
+  UserId     Int
+  FacilityId Int
+  CreatedAt  DateTime @default(now())
+  User       User     @relation(fields: [UserId], references: [Id], onDelete: Cascade)
+  Facility   Facility @relation(fields: [FacilityId], references: [Id], onDelete: Cascade)
+
+  @@unique([UserId, FacilityId])
+}

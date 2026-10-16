@@ -5,6 +5,7 @@ import { getThemeColors } from '../../../theme';
 import { usePrototypeStore } from '../../../state/PrototypeStore';
 import { BookingFormValues, BookingFieldErrors, validateBookingForm } from '../domain/validateBookingForm';
 import { useBooking } from '../state/BookingProvider';
+import { createBooking } from '../../../services/BookingStorage';
 
 type Props = {
   room: Room;
@@ -36,7 +37,21 @@ export function BookingForm({ room, userId, initialValues, onSuccess }: Props) {
     const startsAt = new Date(`${values.date}T${values.startTime}:00`).toISOString();
     const endsAt = new Date(`${values.date}T${values.endTime}:00`).toISOString();
     const success = await submit({ userId, roomId: room.id, startsAt, endsAt, people: Number(values.people) });
-    if (success) onSuccess();
+    if (success) {
+      try {
+        await createBooking({
+          FacilityName: room.name,
+          Date: values.date,
+          StartTime: values.startTime,
+          EndTime: values.endTime,
+          Purpose: `Reservasi ${room.type} (${values.people} orang)`,
+          Status: 'Confirmed',
+        });
+      } catch {
+        // Local persistence fallback
+      }
+      onSuccess();
+    }
   };
 
   const renderField = (label: string, field: keyof BookingFormValues, placeholder: string, props: { keyboardType?: 'default' | 'numeric'; maxLength?: number } = {}) => (
@@ -92,19 +107,35 @@ export function BookingForm({ room, userId, initialValues, onSuccess }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { width: '100%', gap: 11 },
-  heading: { fontSize: 17, fontWeight: '800', marginRight: 25 },
-  roomMeta: { fontSize: 10, marginTop: -6 },
-  field: { flex: 1, gap: 5 },
-  row: { flexDirection: 'row', gap: 10 },
+  container: { width: '100%', gap: 12 },
+  heading: { fontSize: 19, fontWeight: '800', marginRight: 36, letterSpacing: -0.3 },
+  roomMeta: { fontSize: 12, fontWeight: '500', marginTop: 2, marginBottom: 4 },
+  field: { width: '100%', gap: 6 },
+  row: { flexDirection: 'row', gap: 12, width: '100%' },
   half: { flex: 1 },
-  label: { fontSize: 8, letterSpacing: 0.7, fontWeight: '700' },
-  input: { minHeight: 41, paddingHorizontal: 10, borderRadius: 7, borderWidth: 1, fontSize: 11 },
-  fieldError: { color: '#c65f55', fontSize: 9 },
-  errorBox: { padding: 10, borderRadius: 7 },
-  submitError: { color: '#c65f55', fontSize: 10, lineHeight: 15 },
-  submitButton: { minHeight: 44, borderRadius: 8, backgroundColor: '#28583f', justifyContent: 'center', alignItems: 'center', marginTop: 3 },
+  label: { fontSize: 11, letterSpacing: 0.6, fontWeight: '700', textTransform: 'uppercase' },
+  input: {
+    minHeight: 46,
+    height: 46,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  fieldError: { color: '#c65f55', fontSize: 11, fontWeight: '500', marginTop: 2 },
+  errorBox: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#f1bcb6' },
+  submitError: { color: '#c65f55', fontSize: 12, lineHeight: 17, fontWeight: '500' },
+  submitButton: {
+    minHeight: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#28583f',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 6,
+  },
   submitDisabled: { opacity: 0.65 },
-  submitText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  loadingText: { textAlign: 'center', fontSize: 9, marginTop: -6 },
+  submitText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  loadingText: { textAlign: 'center', fontSize: 11, fontWeight: '500', marginTop: 2 },
 });

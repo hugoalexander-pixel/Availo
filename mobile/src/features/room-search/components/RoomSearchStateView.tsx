@@ -37,9 +37,9 @@ export function RoomSearchStateView({ status, error, onRetry, isDark = false, ch
 }
 
 const styles = StyleSheet.create({
-  state: { minHeight: 128, alignItems: 'center', justifyContent: 'center', padding: 22, gap: 9, borderRadius: 10 },
-  title: { fontSize: 14, fontWeight: '700', textAlign: 'center' },
-  copy: { fontSize: 11, lineHeight: 16, textAlign: 'center' },
-  retry: { minHeight: 38, paddingHorizontal: 16, marginTop: 4, borderRadius: 7, backgroundColor: '#28583f', justifyContent: 'center' },
-  retryText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  state: { minHeight: 136, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10, borderRadius: 12 },
+  title: { fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  copy: { fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  retry: { minHeight: 42, paddingHorizontal: 20, marginTop: 6, borderRadius: 10, backgroundColor: '#28583f', justifyContent: 'center' },
+  retryText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });
