@@ -98,6 +98,8 @@ Response: `{ "Status": "OK", "Message": "KelasKosong API berjalan." }`
 
 ## Cara Menjalankan Test
 
+Unit test mencakup 5 user stories inti (autentikasi, filter fasilitas, reservasi anti-konflik, early-end & watcher notification, serta kalkulasi status ketersediaan):
+
 ```bash
 cd apps/api
 npm test
@@ -107,6 +109,20 @@ Untuk menjalankan test dengan output detail:
 ```bash
 npm test -- --verbose
 ```
+
+### Ringkasan Test Suite
+- `tests/auth.test.ts`: Pengujian enkripsi password (bcrypt) dan verifikasi token JWT (US-1).
+- `tests/facility.test.ts`: Pengujian filtering fasilitas berdasarkan tipe, kapasitas, dan nama (US-2).
+- `tests/reservation.test.ts`: Validasi reservasi, batas kapasitas, deteksi tabrakan waktu/double booking, dan tanggal lampau (US-3).
+- `tests/earlyEnd.test.ts`: Transisi status ke EARLY_ENDED, pengiriman notifikasi pemantau, dan validasi hak akses pengguna (US-4).
+- `tests/statusCalculator.test.ts`: Logika penentuan status TERSEDIA, AKAN_TERSEDIA, dan SEDANG_DIGUNAKAN (US-5).
+
+---
+
+## Dokumentasi Teknis Lanjutan
+
+- [User Stories & Acceptance Criteria](docs/USER_STORIES.md) — Rincian 5 core user story dan kriteria penerimaan format Given-When-Then.
+- [Arsitektur Sistem](docs/ARCHITECTURE.md) — Diagram alur, keputusan desain, dan trade-off arsitektur.
 
 ---
 
