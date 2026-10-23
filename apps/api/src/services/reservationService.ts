@@ -84,7 +84,7 @@ export class ReservationService {
       orderBy: { StartTime: 'desc' },
     });
 
-    return reservations.map(this.formatReservation);
+    return reservations.map((r) => this.formatReservation(r));
   }
 
   async getById(id: number) {
@@ -183,7 +183,7 @@ export class ReservationService {
       orderBy: { StartTime: 'asc' },
     });
 
-    return reservations.map(this.formatReservation);
+    return reservations.map((r) => this.formatReservation(r));
   }
 
   private formatReservation(r: any) {

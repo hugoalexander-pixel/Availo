@@ -54,13 +54,6 @@ export class FacilityService {
       };
     });
 
-    if (filters.type || filters.date || filters.time) {
-      return result.filter((f) => {
-        if (filters.type && f.Status === 'SEDANG_DIGUNAKAN') return true;
-        return true;
-      });
-    }
-
     return result;
   }
 

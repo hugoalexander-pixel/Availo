@@ -101,7 +101,7 @@ export class ReservationController {
       const errorMap: Record<string, { status: number; message: string }> = {
         RESERVATION_NOT_FOUND: { status: 404, message: 'Reservasi tidak ditemukan.' },
         NOT_OWNER: { status: 403, message: 'Anda tidak memiliki akses untuk mengakhiri reservasi ini.' },
-        CANNOT_EARLY_END: { status: 400, message: 'Hanya reservasi berstatus ACTIVE yang dapat diakhiri lebih awal.' },
+        CANNOT_EARLY_END: { status: 400, message: 'Hanya reservasi berstatus UPCOMING atau ACTIVE yang dapat diakhiri lebih awal.' },
       };
 
       const mapped = errorMap[err.message];
