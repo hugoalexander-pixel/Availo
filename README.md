@@ -1,57 +1,18 @@
 # KelasKosong
 
-## Deskripsi Masalah
+## Deskripsi
 
-Di lingkungan kampus, mahasiswa sering membutuhkan tempat untuk belajar, mengerjakan tugas kelompok, berdiskusi, melakukan kegiatan organisasi, atau menggunakan fasilitas tertentu.
+**KelasKosong** adalah aplikasi untuk membantu mahasiswa menemukan dan mereservasi fasilitas kampus (ruang kelas, ruang diskusi, lab, aula) yang sedang kosong — tanpa harus datang langsung ke lokasi.
 
-Namun, informasi mengenai ketersediaan fasilitas kampus sering kali tidak mudah ditemukan. Mahasiswa dapat mengetahui bahwa sebuah ruangan "tersedia" hanya setelah datang langsung ke lokasi atau bertanya kepada pihak lain.
+### Masalah yang Diselesaikan
+Informasi ketersediaan ruangan kampus sering tidak terpusat. Mahasiswa harus datang langsung atau bertanya via grup chat untuk mengetahui ruangan mana yang kosong. KelasKosong menyediakan informasi ini secara digital dan real-time.
 
-Di sisi lain, beberapa ruangan dan fasilitas kampus sebenarnya memiliki slot waktu kosong yang tidak digunakan secara optimal.
-
-Masalah yang ingin diselesaikan oleh KelasKosong adalah:
-
-> Bagaimana membantu mahasiswa menemukan dan menggunakan fasilitas kampus yang sedang atau akan kosong tanpa harus mencari secara manual?
-
-KelasKosong menyediakan informasi ketersediaan fasilitas secara terpusat sehingga mahasiswa dapat menemukan ruang yang sesuai berdasarkan lokasi, waktu, kapasitas, dan jenis fasilitas.
-
-Aplikasi juga memungkinkan pengguna yang selesai menggunakan ruangan lebih awal untuk memberi tahu pengguna lain bahwa ruangan tersebut sudah tersedia.
-
----
-
-## Profil Target Pengguna
-
-### Pengguna Utama
-
-Mahasiswa aktif yang:
-
-* Membutuhkan ruangan untuk belajar atau mengerjakan tugas.
-* Sering melakukan kerja kelompok.
-* Mengikuti organisasi atau kegiatan kampus.
-* Membutuhkan fasilitas kampus tertentu.
-* Kesulitan mengetahui ruangan yang sedang tersedia.
-
-### Pengguna Sekunder
-
-Pengelola fasilitas kampus atau organisasi mahasiswa yang membutuhkan informasi mengenai penggunaan fasilitas.
-
----
-
-## Manfaat Aplikasi
-
-### Untuk Mahasiswa
-
-* Menghemat waktu dalam mencari ruangan.
-* Mengetahui fasilitas yang tersedia sebelum datang ke lokasi.
-* Mempermudah pencarian ruangan berdasarkan kapasitas dan fasilitas.
-* Mengurangi ketergantungan pada informasi dari grup chat.
-* Memanfaatkan ruangan kosong secara lebih optimal.
-
-### Untuk Kampus
-
-* Meningkatkan utilisasi fasilitas.
-* Memberikan gambaran mengenai pola penggunaan fasilitas.
-* Mengurangi penggunaan ruangan yang tidak terkoordinasi.
-* Membantu digitalisasi pengelolaan fasilitas.
+### 5 Fitur Inti (MVP)
+1. **Registrasi & Login** — Akun mahasiswa dengan autentikasi JWT
+2. **Pencarian & Filter Fasilitas** — Cari ruangan berdasarkan gedung, tipe, kapasitas
+3. **Reservasi Ruangan** — Pesan ruangan di slot waktu tertentu dengan pencegahan double-booking
+4. **Selesai Lebih Awal** — Lepas ruangan lebih awal agar mahasiswa lain bisa pakai, plus notifikasi otomatis
+5. **Status Ketersediaan Real-Time** — Lihat status ruangan: Tersedia / Akan Tersedia / Sedang Digunakan
 
 ---
 
@@ -59,196 +20,167 @@ Pengelola fasilitas kampus atau organisasi mahasiswa yang membutuhkan informasi 
 
 | Layer | Technology |
 |---|---|
-| Frontend | React + TypeScript + Vite |
-| Styling | CSS (Responsive Design) |
 | Backend | Node.js + TypeScript + Express |
 | Database | PostgreSQL |
 | ORM | Prisma |
+| Auth | JWT + bcrypt |
+| Validasi | Zod (tersedia) |
 | API | REST API |
+| Container | Docker Compose (PostgreSQL) |
 
 ---
 
-## Daftar Fitur Inti
+## Cara Install
 
-### 1. Login dan Registrasi
+### Prasyarat
+- Node.js v18+
+- npm
+- Docker & Docker Compose (untuk PostgreSQL)
 
-Pengguna dapat membuat akun dan masuk ke aplikasi.
+### Langkah-langkah
 
-Data dasar:
+1. **Clone repository**
+   ```bash
+   git clone <repository-url>
+   cd Availo
+   ```
 
-* Nama
-* Email
-* Password
-* Status pengguna
+2. **Setup environment**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Jalankan PostgreSQL via Docker**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Install dependencies**
+   ```bash
+   cd apps/api
+   npm install
+   ```
+
+5. **Jalankan migrasi database**
+   ```bash
+   npx prisma migrate dev
+   ```
+
+6. **Seed data awal**
+   ```bash
+   npx prisma db seed
+   ```
 
 ---
 
-### 2. Daftar Fasilitas
+## Cara Menjalankan
 
-Pengguna dapat melihat daftar fasilitas yang tersedia.
-
-Informasi fasilitas:
-
-* Nama ruangan
-* Gedung
-* Kapasitas
-* Jenis ruangan
-* Fasilitas yang tersedia
-* Status ketersediaan
-
-Contoh:
-
+### Backend API
+```bash
+cd apps/api
+npm run dev
 ```
-Ruang Diskusi 302
-Gedung A
-Kapasitas: 8 orang
+API akan berjalan di `http://localhost:3000`.
 
-Fasilitas:
-✓ Whiteboard
-✓ AC
-✓ Wi-Fi
+### Verifikasi API berjalan
+```bash
+curl http://localhost:3000/api/health
 ```
+Response: `{ "Status": "OK", "Message": "KelasKosong API berjalan." }`
+
+### Akun Demo (dari seed data)
+| Role | Email | Password |
+|---|---|---|
+| Mahasiswa | mahasiswa@kampus.ac.id | password123 |
+| Pengelola | pengelola@kampus.ac.id | password123 |
 
 ---
 
-### 3. Pencarian dan Filter
+## Cara Menjalankan Test
 
-Pengguna dapat mencari fasilitas berdasarkan:
-
-* Waktu
-* Kapasitas
-* Gedung
-* Jenis fasilitas
-* Status tersedia
-
-Contoh:
-
-> "Cari ruangan untuk 6 orang pukul 15.00."
-
-Aplikasi menampilkan ruangan yang sesuai.
-
----
-
-### 4. Reservasi Ruangan
-
-Pengguna dapat memilih ruangan dan melakukan reservasi pada waktu tertentu.
-
-Informasi reservasi:
-
-* Nama ruangan
-* Tanggal
-* Waktu mulai
-* Waktu selesai
-* Jumlah pengguna
-* Status reservasi
-
----
-
-### 5. Status Ketersediaan Real-Time Sederhana
-
-Ruangan memiliki status:
-
-* 🟢 Tersedia
-* 🟡 Akan tersedia
-* 🔴 Sedang digunakan
-
-Status dapat diperbarui berdasarkan reservasi dan laporan pengguna.
-
----
-
-### 6. "Selesai Lebih Cepat"
-
-Pengguna yang sedang menggunakan ruangan dapat melaporkan bahwa mereka telah selesai lebih awal.
-
-Contoh:
-
-Reservasi:
-
-```
-14.00–16.00
+```bash
+cd apps/api
+npm test
 ```
 
-Namun kelompok selesai pukul:
-
+Untuk menjalankan test dengan output detail:
+```bash
+npm test -- --verbose
 ```
-15.10
+
+---
+
+## Struktur API Endpoints
+
+### Authentication
+- `POST /api/auth/register` — Registrasi akun baru
+- `POST /api/auth/login` — Login
+- `GET /api/auth/me` — Data user yang sedang login (perlu token)
+
+### Buildings
+- `GET /api/buildings` — Daftar semua gedung
+- `POST /api/buildings` — Tambah gedung (Pengelola only)
+
+### Facilities
+- `GET /api/facilities` — Daftar fasilitas (dengan filter)
+- `GET /api/facilities/:Id` — Detail fasilitas
+- `POST /api/facilities` — Tambah fasilitas (Pengelola only)
+- `PUT /api/facilities/:Id` — Update fasilitas (Pengelola only)
+- `DELETE /api/facilities/:Id` — Hapus fasilitas (Pengelola only)
+- `GET /api/facilities/:Id/reservations` — Reservasi di fasilitas tertentu
+
+### Reservations
+- `POST /api/reservations` — Buat reservasi
+- `GET /api/reservations/my` — Daftar reservasi saya
+- `GET /api/reservations/:Id` — Detail reservasi
+- `PATCH /api/reservations/:Id/cancel` — Batalkan reservasi
+- `PATCH /api/reservations/:Id/early-end` — Selesai lebih awal
+
+### Notifications
+- `GET /api/notifications` — Daftar notifikasi
+- `PATCH /api/notifications/:Id/read` — Tandai sudah dibaca
+- `POST /api/notifications/watch` — Pantau fasilitas
+
+---
+
+## Struktur Proyek (Backend)
+
+```text
+apps/api/
+├── prisma/
+│   ├── schema.prisma        # Database schema
+│   ├── migrations/          # Prisma migrations
+│   └── seed.ts              # Seed data
+├── src/
+│   ├── controllers/         # HTTP request handlers
+│   │   ├── authController.ts
+│   │   ├── buildingController.ts
+│   │   ├── facilityController.ts
+│   │   ├── notificationController.ts
+│   │   └── reservationController.ts
+│   ├── services/            # Business logic layer
+│   │   ├── authService.ts
+│   │   ├── buildingService.ts
+│   │   ├── facilityService.ts
+│   │   ├── notificationService.ts
+│   │   └── reservationService.ts
+│   ├── routes/              # Express route definitions
+│   │   ├── authRoutes.ts
+│   │   ├── buildingRoutes.ts
+│   │   ├── facilityRoutes.ts
+│   │   ├── notificationRoutes.ts
+│   │   └── reservationRoutes.ts
+│   ├── middleware/          # Express middleware
+│   │   ├── authMiddleware.ts
+│   │   └── errorHandler.ts
+│   ├── utils/               # Utility functions
+│   │   ├── jwt.ts
+│   │   ├── password.ts
+│   │   ├── prisma.ts
+│   │   └── statusCalculator.ts
+│   ├── app.ts               # Express app setup
+│   └── server.ts            # Server entry point
+├── tests/                   # Unit tests
+├── package.json
+└── tsconfig.json
 ```
-
-Pengguna dapat menekan:
-
-> "Saya selesai lebih awal"
-
-Status ruangan kemudian berubah menjadi tersedia.
-
----
-
-### 7. Pemberitahuan
-
-Pengguna dapat menerima pemberitahuan ketika ruangan yang diinginkan menjadi tersedia.
-
-Contoh:
-
-> 🔔 Ruang Diskusi 302 sekarang tersedia.
-
----
-
-### 8. Riwayat Reservasi
-
-Pengguna dapat melihat:
-
-* Reservasi yang akan datang.
-* Reservasi yang sedang berjalan.
-* Reservasi sebelumnya.
-* Status reservasi.
-
----
-
-## Fitur yang Tidak Dikerjakan
-
-Untuk menjaga project tetap realistis dalam 12 pertemuan, fitur berikut tidak termasuk dalam versi awal:
-
-* Integrasi dengan sistem akademik universitas.
-* Integrasi dengan kartu mahasiswa/NFC.
-* Pembayaran fasilitas.
-* Smart lock atau pembukaan pintu otomatis.
-* Integrasi IoT untuk mendeteksi keberadaan manusia.
-* Computer vision untuk menghitung jumlah orang di ruangan.
-* Sinkronisasi dengan seluruh kampus secara otomatis.
-* Sistem rekomendasi berbasis AI.
-* Prediksi penggunaan ruangan menggunakan machine learning.
-* Integrasi kalender eksternal seperti Google Calendar.
-* Sistem administrasi kampus berskala penuh.
-
----
-
-## Kriteria Aplikasi Dinyatakan Berhasil
-
-Aplikasi dinyatakan berhasil apabila pengguna dapat menyelesaikan alur berikut:
-
-1. Membuat akun atau login.
-2. Melihat daftar fasilitas kampus.
-3. Mencari fasilitas berdasarkan waktu dan kapasitas.
-4. Melihat detail fasilitas.
-5. Melakukan reservasi.
-6. Melihat status reservasi.
-7. Membatalkan reservasi.
-8. Melaporkan bahwa penggunaan ruangan telah selesai lebih awal.
-9. Melihat ruangan yang tersedia setelah pembaruan status.
-10. Melihat riwayat reservasi.
-
-### Indikator keberhasilan
-
-Project dianggap berhasil apabila:
-
-* Seluruh alur utama dapat dilakukan tanpa error.
-* Data reservasi tersimpan dengan benar.
-* Dua pengguna tidak dapat melakukan reservasi pada slot waktu yang sama.
-* Status fasilitas berubah sesuai kondisi reservasi.
-* Pengguna dapat menemukan fasilitas yang sesuai melalui fitur pencarian/filter.
-* Aplikasi dapat digunakan secara konsisten pada perangkat mobile.
-
-### Batasan MVP
-
-Versi pertama aplikasi menggunakan data fasilitas yang telah dimasukkan ke dalam sistem dan belum terintegrasi dengan sistem reservasi resmi universitas.
-
-Tujuan MVP adalah membuktikan bahwa konsep **pencarian, penggunaan, dan redistribusi slot kosong fasilitas kampus** dapat berjalan dengan baik.
