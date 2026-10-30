@@ -16,12 +16,33 @@ export const Colors = {
   successLight: "#DCFCE7",
   warning: "#D97706",
   warningLight: "#FEF3C7",
+
+  // Reservation Status
+  upcoming: "#2563EB",
+  upcomingLight: "#DBEAFE",
+  active: "#059669",
+  activeLight: "#D1FAE5",
+  completed: "#64748B",
+  completedLight: "#F1F5F9",
+  cancelled: "#DC2626",
+  cancelledLight: "#FEE2E2",
+  earlyEnded: "#D97706",
+  earlyEndedLight: "#FEF3C7",
+
+  // Backward compatibility aliases
   pending: "#2563EB",
   pendingLight: "#DBEAFE",
   confirmed: "#16A34A",
   confirmedLight: "#DCFCE7",
-  cancelled: "#DC2626",
-  cancelledLight: "#FEE2E2",
+
+  // Facility Status
+  tersedia: "#16A34A",
+  tersediaLight: "#DCFCE7",
+  akanTersedia: "#D97706",
+  akanTersediaLight: "#FEF3C7",
+  sedangDigunakan: "#DC2626",
+  sedangDigunakanLight: "#FEE2E2",
+
   white: "#FFFFFF",
   overlay: "rgba(0, 0, 0, 0.5)",
 };
@@ -53,3 +74,33 @@ export const BorderRadius = {
   xl: 20,
   full: 999,
 };
+
+export function getReservationStatusStyle(status: string) {
+  switch (status) {
+    case "UPCOMING":
+      return { bg: Colors.upcomingLight, text: Colors.upcoming, label: "Mendatang" };
+    case "ACTIVE":
+      return { bg: Colors.activeLight, text: Colors.active, label: "Sedang Berjalan" };
+    case "COMPLETED":
+      return { bg: Colors.completedLight, text: Colors.completed, label: "Selesai" };
+    case "CANCELLED":
+      return { bg: Colors.cancelledLight, text: Colors.cancelled, label: "Dibatalkan" };
+    case "EARLY_ENDED":
+      return { bg: Colors.earlyEndedLight, text: Colors.earlyEnded, label: "Selesai Lebih Awal" };
+    default:
+      return { bg: Colors.surfaceElevated, text: Colors.textSecondary, label: status };
+  }
+}
+
+export function getFacilityStatusStyle(status: string) {
+  switch (status) {
+    case "TERSEDIA":
+      return { bg: Colors.tersediaLight, text: Colors.tersedia, label: "Tersedia" };
+    case "AKAN_TERSEDIA":
+      return { bg: Colors.akanTersediaLight, text: Colors.akanTersedia, label: "Segera Tersedia (≤30m)" };
+    case "SEDANG_DIGUNAKAN":
+      return { bg: Colors.sedangDigunakanLight, text: Colors.sedangDigunakan, label: "Sedang Digunakan" };
+    default:
+      return { bg: Colors.surfaceElevated, text: Colors.textSecondary, label: status };
+  }
+}
