@@ -132,4 +132,73 @@ describe('US-3: Reservasi Ruangan', () => {
       })
     ).rejects.toThrow('FACILITY_NOT_FOUND');
   });
+
+  test('update_reservasi_berhasil_jika_valid', async () => {
+    mockReservationFindUnique.mockResolvedValue({
+      Id: 1,
+      UserId: 1,
+      Status: 'UPCOMING',
+      Facility: { Capacity: 20 },
+    });
+    mockReservationUpdate.mockResolvedValue({
+      Id: 1,
+      UserId: 1,
+      FacilityId: 1,
+      Date: new Date('2027-01-15'),
+      StartTime: new Date('2027-01-15T10:00:00'),
+      EndTime: new Date('2027-01-15T12:00:00'),
+      PartySize: 10,
+      Purpose: 'Revisi materi presentasi',
+      Status: 'UPCOMING',
+      Facility: { Name: 'Ruang Diskusi', Building: { Name: 'Gedung A' } },
+      User: { Id: 1, Name: 'Budi' },
+    });
+
+    const result = await reservationService.update(1, 1, {
+      PartySize: 10,
+      Purpose: 'Revisi materi presentasi',
+    });
+
+    expect(result.PartySize).toBe(10);
+    expect(result.Purpose).toBe('Revisi materi presentasi');
+  });
+
+  test('update_reservasi_ditolak_jika_melebihi_kapasitas', async () => {
+    mockReservationFindUnique.mockResolvedValue({
+      Id: 1,
+      UserId: 1,
+      Status: 'UPCOMING',
+      Facility: { Capacity: 5 },
+    });
+
+    await expect(
+      reservationService.update(1, 1, { PartySize: 15 })
+    ).rejects.toThrow('CAPACITY_EXCEEDED');
+  });
+
+  test('update_reservasi_ditolak_jika_bukan_pemilik', async () => {
+    mockReservationFindUnique.mockResolvedValue({
+      Id: 1,
+      UserId: 2,
+      Status: 'UPCOMING',
+      Facility: { Capacity: 20 },
+    });
+
+    await expect(
+      reservationService.update(1, 1, { Purpose: 'Coba ubah' })
+    ).rejects.toThrow('NOT_OWNER');
+  });
+
+  test('update_reservasi_ditolak_jika_status_bukan_upcoming', async () => {
+    mockReservationFindUnique.mockResolvedValue({
+      Id: 1,
+      UserId: 1,
+      Status: 'COMPLETED',
+      Facility: { Capacity: 20 },
+    });
+
+    await expect(
+      reservationService.update(1, 1, { Purpose: 'Coba ubah' })
+    ).rejects.toThrow('CANNOT_EDIT');
+  });
 });

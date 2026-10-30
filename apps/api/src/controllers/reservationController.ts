@@ -71,6 +71,30 @@ export class ReservationController {
     }
   }
 
+  async update(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.Id);
+      const { PartySize, Purpose } = req.body;
+      const result = await reservationService.update(id, req.user!.UserId, { PartySize, Purpose });
+      res.json({ Data: result, Message: 'Reservasi berhasil diperbarui.' });
+    } catch (err: any) {
+      const errorMap: Record<string, { status: number; message: string }> = {
+        RESERVATION_NOT_FOUND: { status: 404, message: 'Reservasi tidak ditemukan.' },
+        NOT_OWNER: { status: 403, message: 'Anda tidak memiliki akses untuk mengubah reservasi ini.' },
+        CANNOT_EDIT: { status: 400, message: 'Hanya reservasi berstatus UPCOMING yang dapat diubah.' },
+        CAPACITY_EXCEEDED: { status: 400, message: 'Jumlah peserta melebihi kapasitas ruangan.' },
+        INVALID_PARTY_SIZE: { status: 400, message: 'Jumlah peserta minimal 1 orang.' },
+      };
+
+      const mapped = errorMap[err.message];
+      if (mapped) {
+        res.status(mapped.status).json({ Message: mapped.message });
+        return;
+      }
+      res.status(500).json({ Message: 'Terjadi kesalahan saat memperbarui reservasi.' });
+    }
+  }
+
   async cancel(req: Request, res: Response) {
     try {
       const id = Number(req.params.Id);

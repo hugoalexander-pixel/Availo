@@ -118,6 +118,39 @@ export class ReservationService {
     return this.formatReservation(updated);
   }
 
+  async update(id: number, userId: number, data: { PartySize?: number; Purpose?: string }) {
+    const reservation = await prisma.reservation.findUnique({
+      where: { Id: id },
+      include: { Facility: true },
+    });
+    if (!reservation) throw new Error('RESERVATION_NOT_FOUND');
+    if (reservation.UserId !== userId) throw new Error('NOT_OWNER');
+    if (reservation.Status !== ReservationStatus.UPCOMING) throw new Error('CANNOT_EDIT');
+
+    if (data.PartySize !== undefined) {
+      if (typeof data.PartySize !== 'number' || data.PartySize < 1) {
+        throw new Error('INVALID_PARTY_SIZE');
+      }
+      if (data.PartySize > reservation.Facility.Capacity) {
+        throw new Error('CAPACITY_EXCEEDED');
+      }
+    }
+
+    const updated = await prisma.reservation.update({
+      where: { Id: id },
+      data: {
+        ...(data.PartySize !== undefined ? { PartySize: data.PartySize } : {}),
+        ...(data.Purpose !== undefined ? { Purpose: data.Purpose } : {}),
+      },
+      include: {
+        Facility: { include: { Building: true } },
+        User: { select: { Id: true, Name: true } },
+      },
+    });
+
+    return this.formatReservation(updated);
+  }
+
   async earlyEnd(id: number, userId: number) {
     const reservation = await prisma.reservation.findUnique({
       where: { Id: id },
