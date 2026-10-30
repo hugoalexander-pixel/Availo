@@ -32,3 +32,4 @@ export async function getAllReservationPhotos(): Promise<Record<string, string>>
     return {};
   }
 }
+

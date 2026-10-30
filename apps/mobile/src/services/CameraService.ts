@@ -157,3 +157,4 @@ export async function pickPhotoFromGallery(): Promise<PickPhotoResult> {
     return { cancelled: true };
   }
 }
+

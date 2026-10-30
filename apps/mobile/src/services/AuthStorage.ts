@@ -76,3 +76,4 @@ export async function clearAuthSession(): Promise<void> {
   await AsyncStorage.removeItem(TOKEN_KEY);
   await AsyncStorage.removeItem(USER_KEY);
 }
+
