@@ -1,13 +1,11 @@
 {
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev": "npm run dev:api",
     "dev:api": "cd apps/api && npm run dev",
-    "dev:web": "cd apps/web && npm run dev",
     "dev:mobile": "cd apps/mobile && npm run start",
-    "build": "npm run build:api && npm run build:web",
+    "build": "npm run build:api",
     "build:api": "cd apps/api && npm run build",
-    "build:web": "cd apps/web && npm run build",
     "db:migrate": "cd apps/api && npx prisma migrate dev",
     "db:seed": "cd apps/api && npx prisma db seed",
     "db:studio": "cd apps/api && npx prisma studio"
