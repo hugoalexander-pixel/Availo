@@ -1,202 +1,125 @@
-# KelasKosong
+# Availo (KelasKosong) — MVP Lengkap
 
-## Deskripsi
-
-**KelasKosong** adalah aplikasi untuk membantu mahasiswa menemukan dan mereservasi fasilitas kampus (ruang kelas, ruang diskusi, lab, aula) yang sedang kosong — tanpa harus datang langsung ke lokasi.
-
-### Masalah yang Diselesaikan
-Informasi ketersediaan ruangan kampus sering tidak terpusat. Mahasiswa harus datang langsung atau bertanya via grup chat untuk mengetahui ruangan mana yang kosong. KelasKosong menyediakan informasi ini secara digital dan real-time.
-
-### 5 Fitur Inti (MVP)
-1. **Registrasi & Login** — Akun mahasiswa dengan autentikasi JWT
-2. **Pencarian & Filter Fasilitas** — Cari ruangan berdasarkan gedung, tipe, kapasitas
-3. **Reservasi Ruangan** — Pesan ruangan di slot waktu tertentu dengan pencegahan double-booking
-4. **Selesai Lebih Awal** — Lepas ruangan lebih awal agar mahasiswa lain bisa pakai, plus notifikasi otomatis
-5. **Status Ketersediaan Real-Time** — Lihat status ruangan: Tersedia / Akan Tersedia / Sedang Digunakan
+Aplikasi reservasi fasilitas kampus (ruang kelas, ruang diskusi, laboratorium, ruang rapat, aula) secara digital dan real-time untuk mahasiswa dan pengelola fasilitas kampus.
 
 ---
 
-## Technology Stack
+## 📱 Ringkasan Aplikasi Mobile (Availo)
 
-| Layer | Technology |
+Aplikasi mobile dibangun menggunakan **React Native + Expo SDK 58 + Expo Router (file-based routing)** dan terintegrasi penuh (*Full API Integration*) dengan backend REST API KelasKosong.
+
+### Fitur Inti yang Selesai
+1. **Navigasi Lengkap & Konsisten:**
+   - Stack Navigator dengan header terstruktur, back button native, bebas dari dead-end.
+   - Layar: Masuk (Login) ⇄ Daftar (Register) ⇄ Beranda Reservasi Saya ⇄ Cari Fasilitas ⇄ Detail Fasilitas ⇄ Buat Reservasi ⇄ Ubah Reservasi ⇄ Notifikasi ⇄ Profil Pengguna.
+2. **Form & Validasi:**
+   - Semua input memiliki validasi format per-field: tanggal (`YYYY-MM-DD`), jam mulai dan selesai (`HH:MM`), validasi `jam selesai > jam mulai`, batasan kapasitas peserta ruangan, dan pesan error ramah.
+3. **Penyimpanan Data Persisten & Sinkronisasi:**
+   - Token otentikasi JWT disimpan secara terenkripsi di keychain/keystore perangkat via `expo-secure-store`.
+   - Data reservasi dan ketersediaan ruangan tersinkronisasi langsung dengan backend PostgreSQL.
+   - Foto kondisi ruangan disimpan persisten secara lokal di penyimpanan perangkat menggunakan `AsyncStorage`.
+
+---
+
+## 🚀 3 Advanced Features (Implementasi Nyata)
+
+| # | Fitur | Library / API Asli | Manfaat bagi Pengguna | Penanganan Izin & Pembatalan |
+|---|---|---|---|---|
+| **1** | **Autentikasi & Secure Storage** | `expo-secure-store` | Sesi user aman di hardware keychain/keystore; akses berbasis peran (*Role-Based*: Mahasiswa & Pengelola); token otomatis terlampir di setiap request API. | Fallback otomatis ke penyimpanan lokal terenkripsi jika platform tidak mendukung SecureStore. |
+| **2** | **Kamera & Dokumentasi Ruangan** | `expo-image-picker` | Pengguna dapat mengambil foto kondisi awal ruangan sebelum dipakai sebagai bukti dokumentasi fasilitas kampus. | Menangani 3 status izin: *Diminta*, *Ditolak* (tampilkan pesan alternatif), dan *Ditolak Permanen* (konfirmasi buka Pengaturan perangkat). Pembatalan oleh pengguna tidak menyebabkan crash atau kerusakan data. |
+| **3** | **Notifikasi Lokal Terjadwal** | `expo-notifications` + `expo-device` | Pengguna menerima pengingat notifikasi otomatis di perangkat sebelum jadwal reservasi ruangan dimulai, serta konfirmasi visual instan saat reservasi berhasil dibuat. | Menangani izin notifikasi sistem (Android 13+ POST_NOTIFICATIONS & iOS), banner foreground, dan tombol demo uji coba langsung di layar Notifikasi. |
+
+---
+
+## 🛡️ Penanganan State & Kasus di Seluruh Layar
+
+- **Loading:** Indikator spinner (`LoadingView`) saat memuat data dari server atau memproses form.
+- **Empty:** Tampilan informatif (`EmptyView`) dengan ilustrasi ikon dan tombol aksi (misal: "Cari & Reservasi Ruangan" saat belum ada jadwal aktif).
+- **Error:** Pesan kesalahan ramah (`ErrorView`) jika server backend belum aktif atau koneksi terputus, dilengkapi tombol **🔄 Coba Lagi**.
+- **Izin (Permissions):** Mendukung dialog izin platform, pesan penjelasan saat ditolak, dan tautan langsung ke Pengaturan (`Linking.openSettings()`) saat ditolak permanen.
+- **Pembatalan:** Pengguna dapat membatalkan pengambilan foto atau membatalkan pengisian form tanpa crash dan tanpa data tersimpan setengah.
+- **Konfirmasi Aksi Destruktif:** Tindakan pembatalan reservasi, pelepasan ruangan lebih awal, dan keluar akun (logout) selalu meminta konfirmasi pengguna (`Alert.alert`).
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Teknologi |
 |---|---|
-| Backend | Node.js + TypeScript + Express |
-| Database | PostgreSQL |
-| ORM | Prisma |
-| Auth | JWT + bcrypt |
-| Validasi | Zod (tersedia) |
-| API | REST API |
-| Container | Docker Compose (PostgreSQL) |
+| **Mobile App** | React Native 0.88, Expo SDK 58, Expo Router, TypeScript |
+| **Mobile Security** | `expo-secure-store`, `@react-native-async-storage/async-storage` |
+| **Mobile Hardware/Sensors** | `expo-image-picker`, `expo-notifications`, `expo-device` |
+| **Backend API** | Node.js, Express, TypeScript |
+| **Database & ORM** | PostgreSQL 16, Prisma ORM 6.1 |
+| **Testing** | Jest, ts-jest, Node test runner via tsx |
 
 ---
 
-## Cara Install
+## 💻 Cara Install & Menjalankan
 
-### Prasyarat
-- Node.js v18+
-- npm
-- Docker & Docker Compose (untuk PostgreSQL)
+### 1. Prasyarat
+- Node.js v18+ dan npm
+- Docker (opsional untuk database PostgreSQL lokal)
+- Expo Go di HP fisik atau Android Emulator
 
-### Langkah-langkah
-
-1. **Clone repository**
-   ```bash
-   git clone <repository-url>
-   cd Availo
-   ```
-
-2. **Setup environment**
-   ```bash
-   cp .env.example .env
-   ```
-
-3. **Jalankan PostgreSQL via Docker**
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Install dependencies**
-   ```bash
-   cd apps/api
-   npm install
-   ```
-
-5. **Jalankan migrasi database**
-   ```bash
-   npx prisma migrate dev
-   ```
-
-6. **Seed data awal**
-   ```bash
-   npx prisma db seed
-   ```
-
----
-
-## Cara Menjalankan
-
-### Backend API
+### 2. Backend API
 ```bash
+# 1. Masuk ke direktori backend
 cd apps/api
+
+# 2. Install dependencies
+npm install
+
+# 3. Jalankan server backend (port 3000)
 npm run dev
 ```
-API akan berjalan di `http://localhost:3000`.
-
-### Verifikasi API berjalan
+Backend akan aktif di `http://localhost:3000`. Cek kesehatan server via:
 ```bash
 curl http://localhost:3000/api/health
 ```
-Response: `{ "Status": "OK", "Message": "KelasKosong API berjalan." }`
 
-### Akun Demo (dari seed data)
-| Role | Email | Password |
-|---|---|---|
-| Mahasiswa | mahasiswa@kampus.ac.id | password123 |
-| Pengelola | pengelola@kampus.ac.id | password123 |
+### 3. Mobile App (Availo)
+```bash
+# 1. Masuk ke direktori mobile
+cd apps/mobile
+
+# 2. Jalankan Expo dev server
+npm start
+```
+- Tekan `a` untuk membuka di **Android Emulator** (otomatis memakai base URL `http://10.0.2.2:3000/api`).
+- Scan QR code menggunakan aplikasi **Expo Go** pada perangkat fisik Android/iOS.
+- Di layar **Profil**, Anda dapat mengubah URL API ke alamat IP lokal Wi-Fi komputer Anda (contoh: `http://192.168.1.10:3000/api`).
 
 ---
 
-## Cara Menjalankan Test
+## 🧪 Pengujian (Unit Tests)
 
-Unit test mencakup 5 user stories inti (autentikasi, filter fasilitas, reservasi anti-konflik, early-end & watcher notification, serta kalkulasi status ketersediaan):
-
+### Menjalankan Semua Test Backend (36 Tests):
 ```bash
 cd apps/api
 npm test
 ```
+*Hasil:* 5 test suites passed (US-1: Auth, US-2: Filter Fasilitas, US-3: Reservasi & Update, US-4: Early End, US-5: Kalkulator Status).
 
-Untuk menjalankan test dengan output detail:
+### Menjalankan Semua Test Mobile (28 Tests):
 ```bash
-npm test -- --verbose
+cd apps/mobile
+npm run test:all
 ```
-
-### Ringkasan Test Suite
-- `tests/auth.test.ts`: Pengujian enkripsi password (bcrypt) dan verifikasi token JWT (US-1).
-- `tests/facility.test.ts`: Pengujian filtering fasilitas berdasarkan tipe, kapasitas, dan nama (US-2).
-- `tests/reservation.test.ts`: Validasi reservasi, batas kapasitas, deteksi tabrakan waktu/double booking, dan tanggal lampau (US-3).
-- `tests/earlyEnd.test.ts`: Transisi status ke EARLY_ENDED, pengiriman notifikasi pemantau, dan validasi hak akses pengguna (US-4).
-- `tests/statusCalculator.test.ts`: Logika penentuan status TERSEDIA, AKAN_TERSEDIA, dan SEDANG_DIGUNAKAN (US-5).
-
----
-
-## Dokumentasi Teknis Lanjutan
-
-- [User Stories & Acceptance Criteria](docs/USER_STORIES.md) — Rincian 5 core user story dan kriteria penerimaan format Given-When-Then.
-- [Arsitektur Sistem](docs/ARCHITECTURE.md) — Diagram alur, keputusan desain, dan trade-off arsitektur.
+*Hasil:*
+1. `scripts/test-persistence.ts`: 7/7 pengujian siklus CRUD & persistensi AsyncStorage setelah restart aplikasi.
+2. `scripts/test-business-rules.ts`: 21/21 pengujian aturan bisnis:
+   - Validasi autentikasi & penyimpanan token SecureStore
+   - Validasi batasan kapasitas ruangan & anti bentrok waktu
+   - Penyelarasan enum status backend (`UPCOMING`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `EARLY_ENDED`, `TERSEDIA`, `AKAN_TERSEDIA`)
+   - Penanganan 3 status izin (`granted`, `denied`, `blocked`)
+   - Penanganan pembatalan kamera pengguna tanpa crash
 
 ---
 
-## Struktur API Endpoints
+## 👤 Akun Demo Bawaan
 
-### Authentication
-- `POST /api/auth/register` — Registrasi akun baru
-- `POST /api/auth/login` — Login
-- `GET /api/auth/me` — Data user yang sedang login (perlu token)
-
-### Buildings
-- `GET /api/buildings` — Daftar semua gedung
-- `POST /api/buildings` — Tambah gedung (Pengelola only)
-
-### Facilities
-- `GET /api/facilities` — Daftar fasilitas (dengan filter)
-- `GET /api/facilities/:Id` — Detail fasilitas
-- `POST /api/facilities` — Tambah fasilitas (Pengelola only)
-- `PUT /api/facilities/:Id` — Update fasilitas (Pengelola only)
-- `DELETE /api/facilities/:Id` — Hapus fasilitas (Pengelola only)
-- `GET /api/facilities/:Id/reservations` — Reservasi di fasilitas tertentu
-
-### Reservations
-- `POST /api/reservations` — Buat reservasi
-- `GET /api/reservations/my` — Daftar reservasi saya
-- `GET /api/reservations/:Id` — Detail reservasi
-- `PATCH /api/reservations/:Id/cancel` — Batalkan reservasi
-- `PATCH /api/reservations/:Id/early-end` — Selesai lebih awal
-
-### Notifications
-- `GET /api/notifications` — Daftar notifikasi
-- `PATCH /api/notifications/:Id/read` — Tandai sudah dibaca
-- `POST /api/notifications/watch` — Pantau fasilitas
-
----
-
-## Struktur Proyek (Backend)
-
-```text
-apps/api/
-├── prisma/
-│   ├── schema.prisma        # Database schema
-│   ├── migrations/          # Prisma migrations
-│   └── seed.ts              # Seed data
-├── src/
-│   ├── controllers/         # HTTP request handlers
-│   │   ├── authController.ts
-│   │   ├── buildingController.ts
-│   │   ├── facilityController.ts
-│   │   ├── notificationController.ts
-│   │   └── reservationController.ts
-│   ├── services/            # Business logic layer
-│   │   ├── authService.ts
-│   │   ├── buildingService.ts
-│   │   ├── facilityService.ts
-│   │   ├── notificationService.ts
-│   │   └── reservationService.ts
-│   ├── routes/              # Express route definitions
-│   │   ├── authRoutes.ts
-│   │   ├── buildingRoutes.ts
-│   │   ├── facilityRoutes.ts
-│   │   ├── notificationRoutes.ts
-│   │   └── reservationRoutes.ts
-│   ├── middleware/          # Express middleware
-│   │   ├── authMiddleware.ts
-│   │   └── errorHandler.ts
-│   ├── utils/               # Utility functions
-│   │   ├── jwt.ts
-│   │   ├── password.ts
-│   │   ├── prisma.ts
-│   │   └── statusCalculator.ts
-│   ├── app.ts               # Express app setup
-│   └── server.ts            # Server entry point
-├── tests/                   # Unit tests
-├── package.json
-└── tsconfig.json
-```
+| Peran (Role) | Email | Password | Hak Akses |
+|---|---|---|---|
+| **Mahasiswa** | `budi@kampus.ac.id` | `password123` | Cari ruangan kosong, buat reservasi, ambil foto dokumentasi, batal/akhiri jadwal |
+| **Pengelola** | `pengelola@kampus.ac.id` | `adminpass123` | Kelola gedung dan ruangan fasilitas kampus |
