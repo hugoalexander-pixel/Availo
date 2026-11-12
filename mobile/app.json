@@ -30,7 +30,8 @@
           "photosPermission": "KelasKosong memerlukan akses ke foto untuk memasang foto profil.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

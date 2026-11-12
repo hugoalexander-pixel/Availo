@@ -2,13 +2,11 @@ import { useState } from 'react';
 import {
   Alert,
   Image,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +14,9 @@ import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { usePrototypeStore } from '../../src/state/PrototypeStore';
 import { getThemeColors } from '../../src/theme';
+import { ProfileForm } from '../../src/features/profile/ProfileForm';
+import { useProfileRepository } from '../../src/features/profile/profileRepository';
+import { validateProfile } from '../../src/features/profile/validation';
 
 const green = '#28583f';
 
@@ -24,31 +25,36 @@ function getInitials(name: string) {
 }
 
 export default function ProfileScreen() {
-  const { userProfile, signOut, updateProfile, isDark, toggleTheme } = usePrototypeStore();
+  const { userProfile, isDark, toggleTheme } = usePrototypeStore();
+  const repo = useProfileRepository();
   const theme = getThemeColors(isDark);
+
   const [editVisible, setEditVisible] = useState(false);
-  const [draftName, setDraftName] = useState(userProfile?.name ?? '');
+  const [draftName, setDraftName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
+
   const profileName = userProfile?.name ?? 'Mahasiswa';
 
   const handleSignOut = () => {
     Alert.alert('Keluar dari akun?', 'Kamu akan kembali ke halaman masuk.', [
       { text: 'Batal', style: 'cancel' },
-      { text: 'Keluar', style: 'destructive', onPress: () => { signOut(); router.replace('/'); } },
+      { text: 'Keluar', style: 'destructive', onPress: () => { repo.signOut(); router.replace('/'); } },
     ]);
   };
 
   const openEdit = () => {
     setDraftName(userProfile?.name ?? '');
+    setNameError(null);
     setEditVisible(true);
   };
 
   const saveProfile = () => {
-    const name = draftName.trim();
-    if (name.length < 2) {
-      Alert.alert('Nama belum lengkap', 'Masukkan nama minimal 2 karakter.');
+    const errors = validateProfile(draftName, userProfile?.email ?? '');
+    if (errors.name) {
+      setNameError(errors.name);
       return;
     }
-    updateProfile({ name });
+    repo.updateProfile({ name: draftName.trim() });
     setEditVisible(false);
   };
 
@@ -68,7 +74,7 @@ export default function ProfileScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        updateProfile({ photoUri: result.assets[0].uri });
+        repo.updateProfile({ name: repo.getProfile()?.name ?? '', photoUri: result.assets[0].uri });
       }
     } catch {
       Alert.alert('Foto tidak dapat dibuka', 'Coba pilih foto lain dari galeri.');
@@ -112,38 +118,16 @@ export default function ProfileScreen() {
         </Pressable>
       </ScrollView>
 
-      <Modal visible={editVisible} transparent animationType="fade" onRequestClose={() => setEditVisible(false)}>
-        <View style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}>
-          <View style={[styles.modalCard, { backgroundColor: theme.surface }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Edit profil</Text>
-            <Text style={[styles.modalSubtitle, { color: theme.muted }]}>Perbarui nama kamu. Email kampus terikat ke akun dan tidak bisa diubah di sini.</Text>
-
-            <Text style={[styles.label, { color: theme.subtle }]}>NAMA LENGKAP</Text>
-            <TextInput
-              value={draftName}
-              onChangeText={setDraftName}
-              placeholder="Nama lengkap"
-              placeholderTextColor="#a2aaa1"
-              style={[styles.input, { color: theme.text, backgroundColor: theme.input, borderColor: theme.border }]}
-              autoCapitalize="words"
-              returnKeyType="next"
-            />
-            <Text style={styles.label}>EMAIL MAHASISWA · BACA SAJA</Text>
-            <View style={[styles.input, styles.readOnlyInput, { backgroundColor: theme.surfaceSecondary, borderColor: theme.border }]}>
-              <Text style={[styles.readOnlyText, { color: theme.muted }]}>{userProfile?.email ?? 'Email belum tersedia'}</Text>
-            </View>
-
-            <View style={styles.modalActions}>
-              <Pressable style={[styles.cancelButton, { backgroundColor: theme.surfaceSecondary }]} onPress={() => setEditVisible(false)}>
-                <Text style={[styles.cancelText, { color: theme.muted }]}>Batal</Text>
-              </Pressable>
-              <Pressable style={styles.saveButton} onPress={saveProfile}>
-                <Text style={styles.saveText}>Simpan perubahan</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <ProfileForm
+        visible={editVisible}
+        onClose={() => setEditVisible(false)}
+        name={draftName}
+        onNameChange={(v) => { setDraftName(v); setNameError(null); }}
+        email={userProfile?.email ?? 'Email belum tersedia'}
+        isDark={isDark}
+        onSave={saveProfile}
+        error={nameError}
+      />
     </SafeAreaView>
   );
 }
@@ -174,17 +158,4 @@ const styles = StyleSheet.create({
   note: { color: '#8b958b', fontSize: 11, lineHeight: 17, marginTop: 14, textAlign: 'center' },
   logoutButton: { minHeight: 46, marginTop: 16, borderRadius: 10, borderWidth: 1.5, borderColor: '#e4c9c4', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   logoutText: { color: '#ad544a', fontSize: 14, fontWeight: '700' },
-  modalBackdrop: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: 'rgba(15, 25, 18, 0.65)' },
-  modalCard: { width: '100%', maxWidth: 420, padding: 24, borderRadius: 18 },
-  modalTitle: { color: '#253329', fontSize: 20, fontWeight: '700' },
-  modalSubtitle: { color: '#858f85', fontSize: 13, lineHeight: 18, marginTop: 4, marginBottom: 18 },
-  label: { color: '#7d897c', fontSize: 11, letterSpacing: 0.7, fontWeight: '700', marginBottom: 6 },
-  input: { minHeight: 48, borderWidth: 1.5, borderColor: '#e4e9e0', borderRadius: 10, paddingHorizontal: 14, color: '#26342a', backgroundColor: '#fff', fontSize: 14, marginBottom: 14 },
-  readOnlyInput: { justifyContent: 'center', backgroundColor: '#f3f5f1' },
-  readOnlyText: { color: '#7d897c', fontSize: 13 },
-  modalActions: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  cancelButton: { flex: 1, minHeight: 46, borderRadius: 10, backgroundColor: '#f1f3ef', alignItems: 'center', justifyContent: 'center' },
-  cancelText: { color: '#647064', fontSize: 13, fontWeight: '700' },
-  saveButton: { flex: 1.5, minHeight: 46, borderRadius: 10, backgroundColor: green, alignItems: 'center', justifyContent: 'center' },
-  saveText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });
