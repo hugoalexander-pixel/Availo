@@ -7,14 +7,22 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "availo",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4F46E5"
+    },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.availo.kelaskosong",
       "infoPlist": {
         "NSCameraUsageDescription": "Availo membutuhkan akses kamera untuk mengambil foto dokumentasi kondisi ruangan saat reservasi.",
         "NSPhotoLibraryUsageDescription": "Availo membutuhkan akses galeri foto untuk memilih bukti foto kondisi ruangan."
       }
     },
     "android": {
+      "package": "com.availo.kelaskosong",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -50,6 +58,11 @@
           "color": "#4F46E5"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
   }
 }
