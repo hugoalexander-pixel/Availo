@@ -181,3 +181,4 @@ gh issue create \
 
 echo ""
 echo "🎉 Semua 11 issue berhasil dibuat di repositori GitHub!"
+

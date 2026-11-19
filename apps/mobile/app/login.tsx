@@ -14,6 +14,7 @@ import {
 import { Stack, router } from "expo-router";
 import { apiClient, ApiError, NetworkError } from "../src/services/ApiClient";
 import { saveAuthSession } from "../src/services/AuthStorage";
+import { getApiBaseUrl, setCustomApiUrl } from "../src/config/api";
 import { Colors, Spacing, FontSize, BorderRadius } from "../src/constants/Theme";
 import { User } from "../src/types/Models";
 
@@ -30,6 +31,9 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("password123");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [showServerConfig, setShowServerConfig] = useState(false);
+  const [serverUrlInput, setServerUrlInput] = useState(getApiBaseUrl());
 
   async function handleLogin() {
     setErrorMessage(null);
@@ -60,6 +64,14 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleSaveServerUrl() {
+    const clean = serverUrlInput.trim().replace(/\/+$/, "");
+    setCustomApiUrl(clean);
+    setServerUrlInput(clean);
+    setErrorMessage(null);
+    Alert.alert("URL Server Disimpan", `Aplikasi sekarang akan terhubung ke:\n${clean}`);
   }
 
   function fillDemoAccount(type: "mahasiswa" | "pengelola") {
@@ -97,6 +109,41 @@ export default function LoginScreen() {
           {errorMessage && (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
+              <TouchableOpacity
+                style={styles.errorActionBtn}
+                onPress={() => setShowServerConfig(true)}
+              >
+                <Text style={styles.errorActionBtnText}>⚙️ Atur Alamat Server Backend</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {showServerConfig && (
+            <View style={styles.serverConfigContainer}>
+              <Text style={styles.serverConfigTitle}>⚙️ Pengaturan Alamat API Backend</Text>
+              <Text style={styles.serverConfigDesc}>
+                Jika membuka via HP fisik di jaringan Wi-Fi berbeda atau menggunakan tunnel (localtunnel/ngrok), masukkan URL server di bawah:
+              </Text>
+              <TextInput
+                style={styles.serverConfigInput}
+                value={serverUrlInput}
+                onChangeText={setServerUrlInput}
+                placeholder="https://xxx.loca.lt/api"
+                placeholderTextColor={Colors.textTertiary}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <View style={styles.serverConfigActions}>
+                <TouchableOpacity style={styles.serverSaveBtn} onPress={handleSaveServerUrl}>
+                  <Text style={styles.serverSaveBtnText}>Simpan URL</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.serverCancelBtn}
+                  onPress={() => setShowServerConfig(false)}
+                >
+                  <Text style={styles.serverCancelBtnText}>Tutup</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -166,6 +213,15 @@ export default function LoginScreen() {
             </View>
           </View>
 
+          <TouchableOpacity
+            style={styles.serverToggleLink}
+            onPress={() => setShowServerConfig(!showServerConfig)}
+          >
+            <Text style={styles.serverToggleLinkText}>
+              🌐 {showServerConfig ? "Sembunyikan Pengaturan Server" : "Ubah Alamat Server API"}
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.registerPrompt}>
             <Text style={styles.registerPromptText}>Belum punya akun?</Text>
             <TouchableOpacity onPress={() => router.push("/register")}>
@@ -232,7 +288,7 @@ const styles = StyleSheet.create({
   errorBox: {
     backgroundColor: Colors.errorLight,
     padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
+    borderRadius: BorderRadius.md,
     marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.error + "40",
@@ -241,6 +297,81 @@ const styles = StyleSheet.create({
     color: Colors.error,
     fontSize: FontSize.sm,
     lineHeight: 18,
+  },
+  errorActionBtn: {
+    marginTop: Spacing.sm,
+    alignSelf: "flex-start",
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.error + "60",
+  },
+  errorActionBtnText: {
+    fontSize: FontSize.xs,
+    color: Colors.error,
+    fontWeight: "700",
+  },
+  serverConfigContainer: {
+    backgroundColor: Colors.surfaceElevated,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  serverConfigTitle: {
+    fontSize: FontSize.xs,
+    fontWeight: "700",
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  serverConfigDesc: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    lineHeight: 16,
+  },
+  serverConfigInput: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: FontSize.xs,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+  },
+  serverConfigActions: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  serverSaveBtn: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+  },
+  serverSaveBtnText: {
+    color: Colors.white,
+    fontSize: FontSize.xs,
+    fontWeight: "700",
+  },
+  serverCancelBtn: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+  },
+  serverCancelBtnText: {
+    color: Colors.textSecondary,
+    fontSize: FontSize.xs,
   },
   fieldGroup: {
     marginBottom: Spacing.lg,
@@ -313,11 +444,21 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontWeight: "600",
   },
+  serverToggleLink: {
+    alignItems: "center",
+    marginTop: Spacing.lg,
+    paddingVertical: Spacing.xs,
+  },
+  serverToggleLinkText: {
+    fontSize: FontSize.xs,
+    color: Colors.primary,
+    fontWeight: "600",
+  },
   registerPrompt: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: Spacing.xl,
+    marginTop: Spacing.md,
     gap: Spacing.xs,
   },
   registerPromptText: {
@@ -330,4 +471,3 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
-

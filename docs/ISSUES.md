@@ -172,3 +172,4 @@ Dokumen ini berisi daftar minimal 10 issue nyata (6 Bug dan 5 Enhancement) yang 
   - Endpoint `POST /api/auth/forgot-password` untuk mengirimkan token reset ke email.
   - Endpoint `POST /api/auth/reset-password` untuk memverifikasi token dan mengubah hash password baru.
   - Layar "Lupa Password" di aplikasi mobile.
+

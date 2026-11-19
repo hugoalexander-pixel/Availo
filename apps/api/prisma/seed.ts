@@ -28,6 +28,17 @@ async function main() {
     },
   });
 
+  const budi = await prisma.user.upsert({
+    where: { Email: 'budi@kampus.ac.id' },
+    update: {},
+    create: {
+      Name: 'Budi Santoso',
+      Email: 'budi@kampus.ac.id',
+      Password: passwordHash,
+      Role: Role.MAHASISWA,
+    },
+  });
+
   const buildingsData = [
     { Name: 'Gedung A', Code: 'GD-A', Description: 'Gedung utama fakultas' },
     { Name: 'Gedung B', Code: 'GD-B', Description: 'Gedung laboratorium' },

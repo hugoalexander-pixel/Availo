@@ -131,3 +131,4 @@ Jika ingin backend online 24/7 tanpa laptop harus menyala:
 | **Izin Kamera / Galeri Ditolak Permanen** | Pengguna memilih *"Jangan tanya lagi"* | Buka menu **Pengaturan HP** -> Aplikasi -> Availo -> Izin -> aktifkan Kamera dan Foto. Di aplikasi, dialog konfirmasi otomatis mengarahkan ke halaman ini jika ditekan. |
 | **Notifikasi tidak muncul di Android 13+** | Izin `POST_NOTIFICATIONS` belum diberikan | Buka menu Notifikasi (🔔) di aplikasi -> tekan tombol **🔔 Uji Notifikasi** untuk memicu permintaan izin sistem, lalu pilih *Izinkan*. |
 | **EAS Build Antre Terlalu Lama** | Kuota concurrent gratis sedang padat | Anda dapat memantau progres build langsung di terminal atau dashboard [expo.dev](https://expo.dev). |
+

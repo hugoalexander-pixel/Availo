@@ -130,3 +130,4 @@ Untuk mendemokan aplikasi tanpa harus menunggu proses review publik Google yang 
 5. Klik **Save** lalu **Review and roll out release**.
 6. Masuk ke tab **Testers** -> buat daftar email (misal: `penguji-kelompok@gmail.com`).
 7. Salin tautan **Join on Android** atau **Join on Web** dan bagikan kepada penguji/dosen untuk memasang aplikasi langsung dari Play Store.
+
