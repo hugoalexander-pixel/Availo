@@ -184,6 +184,32 @@ async function runTestSuite() {
   assertTest("Foto berhasil diambil menghasilkan URI valid", userSuccessCamera.uri === "file:///mock/room-photo.jpg");
   console.log("");
 
+  // --- SUITE 6: RUNTIME LOGGING, REDACTION & CORRELATION ---
+  console.log("▶ SUITE 6: Runtime Logging, Redaction & Correlation");
+  const { redactSensitiveData, generateRequestId } = await import("../src/utils/logger");
+
+  const sensitivePayload = {
+    email: "budi@kampus.ac.id",
+    password: "superSecretPassword123",
+    token: "secret-jwt-token",
+    authorization: "Bearer eyJhbGciOiJIUzI1NiJ9",
+    meta: {
+      jwt: "xyz",
+      nonSensitive: "Availo Room Booking",
+    },
+  };
+
+  const cleanPayload = redactSensitiveData(sensitivePayload);
+  assertTest("Redaksi menyembunyikan password", cleanPayload.password === "[REDACTED]");
+  assertTest("Redaksi menyembunyikan token & jwt", cleanPayload.token === "[REDACTED]" && cleanPayload.meta.jwt === "[REDACTED]");
+  assertTest("Redaksi menyembunyikan authorization", cleanPayload.authorization === "[REDACTED]");
+  assertTest("Redaksi mempertahankan field non-sensitif", cleanPayload.meta.nonSensitive === "Availo Room Booking");
+
+  const reqId1 = generateRequestId();
+  const reqId2 = generateRequestId();
+  assertTest("RequestId client dihasilkan unik dan tidak kosong", typeof reqId1 === "string" && reqId1.length > 5 && reqId1 !== reqId2);
+  console.log("");
+
   console.log("==========================================================");
   console.log(`  🎉 HASIL: SEMUA ${passed}/${total} PENGUJIAN BISNIS & FITUR LULUS!`);
   console.log("==========================================================");

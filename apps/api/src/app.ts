@@ -6,6 +6,7 @@ import { facilityRoutes } from './routes/facilityRoutes';
 import { reservationRoutes } from './routes/reservationRoutes';
 import { notificationRoutes } from './routes/notificationRoutes';
 import { buildingRoutes } from './routes/buildingRoutes';
+import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config({ path: '../../.env' });
@@ -14,6 +15,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 app.get('/api/health', (_req, res) => {
   res.json({ Status: 'OK', Message: 'KelasKosong API berjalan.' });

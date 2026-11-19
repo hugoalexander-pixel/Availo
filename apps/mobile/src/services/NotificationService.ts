@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Alert, Linking, Platform } from "react-native";
 import { PermissionResult } from "./CameraService";
+import { logger } from "../utils/logger";
 
 // Konfigurasi bagaimana notifikasi ditampilkan saat app di Foreground
 Notifications.setNotificationHandler({
@@ -47,9 +48,12 @@ export async function requestNotificationPermission(): Promise<PermissionResult>
       return "granted";
     }
 
-    return requested.canAskAgain ? "denied" : "blocked";
+    const result = requested.canAskAgain ? "denied" : "blocked";
+    logger.warn("PERMISSION", `Izin notifikasi ditolak (status: ${result})`, { canAskAgain: requested.canAskAgain });
+    return result;
   }
 
+  logger.warn("PERMISSION", "Izin notifikasi diblokir permanen (blocked)");
   return "blocked";
 }
 
@@ -77,10 +81,12 @@ export function showNotificationBlockedAlert() {
 export async function sendInstantNotification(title: string, body: string): Promise<boolean> {
   const perm = await requestNotificationPermission();
   if (perm === "blocked") {
+    logger.warn("NOTIFICATION", "Kirim notifikasi dicegah: izin notifikasi diblokir");
     showNotificationBlockedAlert();
     return false;
   }
   if (perm === "denied") {
+    logger.warn("NOTIFICATION", "Kirim notifikasi dicegah: izin notifikasi ditolak");
     Alert.alert("Izin Notifikasi Ditolak", "Pengingat tidak dapat ditampilkan tanpa izin notifikasi.");
     return false;
   }
@@ -94,9 +100,10 @@ export async function sendInstantNotification(title: string, body: string): Prom
       },
       trigger: null, // langsung kirim sekarang
     });
+    logger.info("NOTIFICATION", "Notifikasi instan berhasil dikirim", { title });
     return true;
-  } catch (error) {
-    console.warn("Gagal mengirim notifikasi:", error);
+  } catch (error: any) {
+    logger.error("NOTIFICATION", `Gagal mengirim notifikasi instan: ${error?.message}`, error);
     return false;
   }
 }
@@ -113,6 +120,7 @@ export async function scheduleReservationReminder(data: {
 }): Promise<string | null> {
   const perm = await requestNotificationPermission();
   if (perm !== "granted") {
+    logger.warn("NOTIFICATION", `Jadwal notifikasi dilewati: izin berstatus ${perm}`, { perm });
     if (perm === "blocked") showNotificationBlockedAlert();
     return null;
   }
@@ -131,9 +139,14 @@ export async function scheduleReservationReminder(data: {
       },
     });
 
+    logger.info("NOTIFICATION", "Pengingat reservasi berhasil dijadwalkan", {
+      notificationId,
+      facilityName: data.facilityName,
+    });
+
     return notificationId;
-  } catch (err) {
-    console.warn("Error scheduling notification:", err);
+  } catch (err: any) {
+    logger.error("NOTIFICATION", `Error scheduling notification: ${err?.message}`, err);
     return null;
   }
 }

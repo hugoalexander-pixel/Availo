@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from "../config/api";
 import { getAuthToken, clearAuthSession } from "./AuthStorage";
+import { logger, generateRequestId } from "../utils/logger";
 
 export class ApiError extends Error {
   status: number;
@@ -27,11 +28,14 @@ interface RequestOptions extends RequestInit {
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+  const method = (options.method || "GET").toUpperCase();
+  const requestId = generateRequestId();
 
   const token = await getAuthToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "X-Request-Id": requestId,
     ...(options.headers as Record<string, string>),
   };
 
@@ -43,6 +47,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  logger.debug("API", `-> ${method} ${endpoint}`, { requestId, method, endpoint });
+
+  const startTime = Date.now();
+
   try {
     const res = await fetch(url, {
       ...options,
@@ -51,9 +59,18 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     });
 
     clearTimeout(timeoutId);
+    const durationMs = Date.now() - startTime;
+
+    logger.info("API", `<- ${method} ${endpoint} [${res.status}] ${durationMs}ms`, {
+      requestId,
+      method,
+      endpoint,
+      status: res.status,
+      durationMs,
+    });
 
     if (res.status === 401) {
-      // Token kedaluwarsa atau tidak valid
+      logger.warn("API", `Sesi kedaluwarsa pada ${endpoint} (401)`, { requestId });
       await clearAuthSession();
       throw new ApiError(
         "Sesi Anda telah berakhir. Silakan login kembali.",
@@ -72,19 +89,35 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         json?.Message ||
         json?.message ||
         `Permintaan gagal dengan status ${res.status}`;
+      logger.warn("API", `API Error ${method} ${endpoint} [${res.status}]: ${message}`, {
+        requestId,
+        status: res.status,
+        message,
+      });
       throw new ApiError(message, res.status, json);
     }
 
     return json as T;
   } catch (err: any) {
     clearTimeout(timeoutId);
+    const durationMs = Date.now() - startTime;
+
     if (err instanceof ApiError) {
       throw err;
     }
+
     if (err.name === "AbortError") {
+      logger.error("API", `Koneksi timeout pada ${method} ${endpoint} (${durationMs}ms)`, err, {
+        requestId,
+      });
       throw new NetworkError("Koneksi timeout. Server tidak merespons dalam waktu 10 detik.");
     }
-    // Jaringan terputus / fetch failed
+
+    logger.error("API", `Kegagalan jaringan pada ${method} ${endpoint}: ${err.message}`, err, {
+      requestId,
+      baseUrl,
+    });
+
     throw new NetworkError(
       "Server tidak dapat dihubungi. Pastikan server backend sedang berjalan di " + baseUrl
     );
@@ -119,4 +152,3 @@ export const apiClient = {
   delete: <T>(endpoint: string, options?: RequestOptions) =>
     request<T>(endpoint, { ...options, method: "DELETE" }),
 };
-

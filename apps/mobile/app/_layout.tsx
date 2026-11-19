@@ -1,11 +1,36 @@
 import { useEffect, useState } from "react";
-import { Stack, router } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Colors } from "../src/constants/Theme";
 import { getAuthToken } from "../src/services/AuthStorage";
 import LoadingView from "../src/components/LoadingView";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
+import { logger } from "../src/utils/logger";
 
-export default function RootLayout() {
+declare const ErrorUtils: any;
+
+// Global JS error handler setup
+if (typeof ErrorUtils !== "undefined" && ErrorUtils.getGlobalHandler) {
+  const originalHandler = ErrorUtils.getGlobalHandler();
+  ErrorUtils.setGlobalHandler((error: any, isFatal?: boolean) => {
+    logger.error("CRASH_GLOBAL", `Fatal: ${isFatal} - ${error?.message}`, error);
+    if (originalHandler) {
+      originalHandler(error, isFatal);
+    }
+  });
+}
+
+function NavigationTracker() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    logger.screen(pathname || "/");
+  }, [pathname]);
+
+  return null;
+}
+
+function MainApp() {
   const [checkedAuth, setCheckedAuth] = useState(false);
 
   useEffect(() => {
@@ -13,9 +38,13 @@ export default function RootLayout() {
       try {
         const token = await getAuthToken();
         if (!token) {
+          logger.info("AUTH", "Tidak ada sesi aktif, mengarahkan ke /login");
           router.replace("/login");
+        } else {
+          logger.info("AUTH", "Sesi aktif ditemukan");
         }
-      } catch {
+      } catch (err: any) {
+        logger.error("AUTH", "Gagal memeriksa sesi", err);
         router.replace("/login");
       } finally {
         setCheckedAuth(true);
@@ -31,6 +60,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
+      <NavigationTracker />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: Colors.primary },
@@ -51,5 +81,13 @@ export default function RootLayout() {
         <Stack.Screen name="profile" options={{ title: "Profil Pengguna" }} />
       </Stack>
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
   );
 }

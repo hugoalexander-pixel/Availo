@@ -1,19 +1,28 @@
 import { Request, Response } from 'express';
 import { ReservationService } from '../services/reservationService';
+import { logger } from '../utils/logger';
 
 const reservationService = new ReservationService();
 
 export class ReservationController {
   async create(req: Request, res: Response) {
-    try {
-      const { FacilityId, Date, StartTime, EndTime, PartySize, Purpose } = req.body;
+    const { FacilityId, Date, StartTime, EndTime, PartySize, Purpose } = req.body;
 
+    try {
       if (!FacilityId || !Date || !StartTime || !EndTime || !PartySize) {
+        logger.warn('Pembuatan reservasi gagal: data wajib tidak lengkap', {
+          requestId: req.requestId,
+          userId: req.user?.UserId,
+        });
         res.status(400).json({ Message: 'FacilityId, Date, StartTime, EndTime, dan PartySize wajib diisi.' });
         return;
       }
 
       if (typeof PartySize !== 'number' || PartySize < 1) {
+        logger.warn('Pembuatan reservasi gagal: partySize tidak valid', {
+          requestId: req.requestId,
+          partySize: PartySize,
+        });
         res.status(400).json({ Message: 'Jumlah peserta harus minimal 1 orang.' });
         return;
       }
@@ -28,6 +37,14 @@ export class ReservationController {
         Purpose,
       });
 
+      logger.info('Reservasi berhasil dibuat', {
+        requestId: req.requestId,
+        reservationId: result.Id,
+        userId: req.user!.UserId,
+        facilityId: FacilityId,
+        date: Date,
+      });
+
       res.status(201).json({ Data: result, Message: 'Reservasi berhasil dibuat.' });
     } catch (err: any) {
       const errorMap: Record<string, { status: number; message: string }> = {
@@ -40,9 +57,20 @@ export class ReservationController {
 
       const mapped = errorMap[err.message];
       if (mapped) {
+        logger.warn('Pembuatan reservasi ditolak oleh validasi bisnis', {
+          requestId: req.requestId,
+          userId: req.user?.UserId,
+          facilityId: FacilityId,
+          reason: mapped.message,
+        });
         res.status(mapped.status).json({ Message: mapped.message });
         return;
       }
+
+      logger.error('Pembuatan reservasi gagal karena kesalahan server', {
+        requestId: req.requestId,
+        error: err.message,
+      });
       res.status(500).json({ Message: 'Terjadi kesalahan saat membuat reservasi.' });
     }
   }
@@ -76,6 +104,13 @@ export class ReservationController {
       const id = Number(req.params.Id);
       const { PartySize, Purpose } = req.body;
       const result = await reservationService.update(id, req.user!.UserId, { PartySize, Purpose });
+
+      logger.info('Reservasi berhasil diperbarui', {
+        requestId: req.requestId,
+        reservationId: id,
+        userId: req.user!.UserId,
+      });
+
       res.json({ Data: result, Message: 'Reservasi berhasil diperbarui.' });
     } catch (err: any) {
       const errorMap: Record<string, { status: number; message: string }> = {
@@ -88,6 +123,11 @@ export class ReservationController {
 
       const mapped = errorMap[err.message];
       if (mapped) {
+        logger.warn('Pembaruan reservasi ditolak', {
+          requestId: req.requestId,
+          reservationId: req.params.Id,
+          reason: mapped.message,
+        });
         res.status(mapped.status).json({ Message: mapped.message });
         return;
       }
@@ -99,6 +139,13 @@ export class ReservationController {
     try {
       const id = Number(req.params.Id);
       const result = await reservationService.cancel(id, req.user!.UserId);
+
+      logger.info('Reservasi berhasil dibatalkan', {
+        requestId: req.requestId,
+        reservationId: id,
+        userId: req.user!.UserId,
+      });
+
       res.json({ Data: result, Message: 'Reservasi berhasil dibatalkan.' });
     } catch (err: any) {
       const errorMap: Record<string, { status: number; message: string }> = {
@@ -109,6 +156,11 @@ export class ReservationController {
 
       const mapped = errorMap[err.message];
       if (mapped) {
+        logger.warn('Pembatalan reservasi ditolak', {
+          requestId: req.requestId,
+          reservationId: req.params.Id,
+          reason: mapped.message,
+        });
         res.status(mapped.status).json({ Message: mapped.message });
         return;
       }
@@ -120,6 +172,13 @@ export class ReservationController {
     try {
       const id = Number(req.params.Id);
       const result = await reservationService.earlyEnd(id, req.user!.UserId);
+
+      logger.info('Reservasi diakhiri lebih awal (ruangan dibebaskan)', {
+        requestId: req.requestId,
+        reservationId: id,
+        userId: req.user!.UserId,
+      });
+
       res.json({ Data: result, Message: 'Ruangan telah dibebaskan. Terima kasih!' });
     } catch (err: any) {
       const errorMap: Record<string, { status: number; message: string }> = {
@@ -130,6 +189,11 @@ export class ReservationController {
 
       const mapped = errorMap[err.message];
       if (mapped) {
+        logger.warn('Pengakhiran reservasi lebih awal ditolak', {
+          requestId: req.requestId,
+          reservationId: req.params.Id,
+          reason: mapped.message,
+        });
         res.status(mapped.status).json({ Message: mapped.message });
         return;
       }
