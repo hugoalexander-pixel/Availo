@@ -1,5 +1,6 @@
 import prisma from '../utils/prisma';
 import { ReservationStatus, NotificationType } from '@prisma/client';
+import { isDateInPast } from '../utils/dateHelper';
 
 export class ReservationService {
   async create(data: {
@@ -26,7 +27,7 @@ export class ReservationService {
       throw new Error('INVALID_TIME_RANGE');
     }
 
-    if (date < new Date(new Date().toDateString())) {
+    if (isDateInPast(data.Date)) {
       throw new Error('DATE_IN_PAST');
     }
 
