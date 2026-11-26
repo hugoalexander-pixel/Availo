@@ -19,3 +19,38 @@ export function isDateInPast(dateStr: string, referenceDate: Date = new Date()):
   const todayStr = formatLocalDate(referenceDate);
   return normalizedInput < todayStr;
 }
+
+/**
+ * Membangun objek Date referensi berdasarkan filter tanggal & jam dari request.
+ * Jika filter tidak diberikan, mengembalikan waktu sekarang (now).
+ */
+export function buildReferenceDate(
+  filterDate?: string,
+  filterTime?: string,
+  now: Date = new Date()
+): Date {
+  if (!filterDate && !filterTime) {
+    return now;
+  }
+
+  const todayStr = formatLocalDate(now);
+  const datePart = filterDate ? filterDate.trim().slice(0, 10) : todayStr;
+
+  if (!filterTime && datePart === todayStr) {
+    return now;
+  }
+
+  let timePart: string;
+  if (filterTime) {
+    const trimmed = filterTime.trim();
+    timePart = trimmed.length === 5 ? `${trimmed}:00` : trimmed;
+  } else {
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    timePart = `${hh}:${mm}:${ss}`;
+  }
+
+  const parsed = new Date(`${datePart}T${timePart}`);
+  return Number.isNaN(parsed.getTime()) ? now : parsed;
+}

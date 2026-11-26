@@ -1,6 +1,7 @@
 import prisma from '../utils/prisma';
 import { FacilityType, ReservationStatus } from '@prisma/client';
 import { calculateFacilityStatus, FacilityStatus } from '../utils/statusCalculator';
+import { buildReferenceDate } from '../utils/dateHelper';
 
 export class FacilityService {
   async list(filters: {
@@ -33,9 +34,9 @@ export class FacilityService {
       orderBy: { Name: 'asc' },
     });
 
-    const now = new Date();
+    const referenceDate = buildReferenceDate(filters.date, filters.time, new Date());
     const result = facilities.map((f) => {
-      const status = calculateFacilityStatus(f.Reservations, now);
+      const status = calculateFacilityStatus(f.Reservations, referenceDate);
       return {
         Id: f.Id,
         Name: f.Name,

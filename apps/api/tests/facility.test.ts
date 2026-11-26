@@ -132,4 +132,62 @@ describe('US-2: Pencarian & Filter Fasilitas', () => {
     expect(result[0].Amenities).toEqual([{ Id: 1, Name: 'Whiteboard', Icon: '📝' }]);
     expect(result[0].Status).toBe('TERSEDIA');
   });
+
+  describe('Regression Fix #17: Status fasilitas mengikuti filter tanggal dan jam', () => {
+    beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-11-26T10:00:00'));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    const buildFacilityWithReservations = (reservations: any[]) => ({
+      ...sampleFacilities[0],
+      Reservations: reservations,
+    });
+
+    const mkRes = (dateStr: string, start: string, end: string, status = 'UPCOMING') => ({
+      Id: 101,
+      UserId: 1,
+      FacilityId: 1,
+      Date: new Date(dateStr),
+      StartTime: new Date(`${dateStr}T${start}:00`),
+      EndTime: new Date(`${dateStr}T${end}:00`),
+      Status: status,
+    });
+
+    test.each([
+      // [deskripsi, filterDate, filterTime, reservations, expectedStatus]
+      ['hari ini sebelum reservasi (>30 mnt)', '2026-11-26', '08:00', [mkRes('2026-11-26', '09:00', '12:00')], 'TERSEDIA'],
+      ['hari ini 15 mnt sebelum mulai', '2026-11-26', '08:45', [mkRes('2026-11-26', '09:00', '12:00')], 'AKAN_TERSEDIA'],
+      ['hari ini tepat jam awal (09:00)', '2026-11-26', '09:00', [mkRes('2026-11-26', '09:00', '12:00')], 'SEDANG_DIGUNAKAN'],
+      ['hari ini di tengah reservasi (10:30)', '2026-11-26', '10:30', [mkRes('2026-11-26', '09:00', '12:00')], 'SEDANG_DIGUNAKAN'],
+      ['hari ini 15 mnt sebelum selesai (11:45)', '2026-11-26', '11:45', [mkRes('2026-11-26', '09:00', '12:00')], 'AKAN_TERSEDIA'],
+      ['hari ini tepat jam akhir (12:00)', '2026-11-26', '12:00', [mkRes('2026-11-26', '09:00', '12:00')], 'TERSEDIA'],
+      ['besok ruangan penuh (08:00-17:00) jam 10:00', '2026-11-27', '10:00', [mkRes('2026-11-27', '08:00', '17:00')], 'SEDANG_DIGUNAKAN'],
+      ['besok ruangan penuh jam awal (08:00)', '2026-11-27', '08:00', [mkRes('2026-11-27', '08:00', '17:00')], 'SEDANG_DIGUNAKAN'],
+      ['besok ruangan penuh 15 mnt sblm akhir (16:45)', '2026-11-27', '16:45', [mkRes('2026-11-27', '08:00', '17:00')], 'AKAN_TERSEDIA'],
+      ['besok ruangan sebagian (09:00-11:00) jam 10:00', '2026-11-27', '10:00', [mkRes('2026-11-27', '09:00', '11:00')], 'SEDANG_DIGUNAKAN'],
+      ['besok ruangan sebagian (09:00-11:00) jam 14:00', '2026-11-27', '14:00', [mkRes('2026-11-27', '09:00', '11:00')], 'TERSEDIA'],
+      ['besok ruangan kosong jam 10:00', '2026-11-27', '10:00', [], 'TERSEDIA'],
+      ['lusa ruangan penuh (07:00-21:00) jam 13:00', '2026-11-28', '13:00', [mkRes('2026-11-28', '07:00', '21:00')], 'SEDANG_DIGUNAKAN'],
+      ['lusa ruangan sebagian 20 mnt sblm mulai (12:40)', '2026-11-28', '12:40', [mkRes('2026-11-28', '13:00', '15:00')], 'AKAN_TERSEDIA'],
+      ['lusa ruangan sebagian 20 mnt sblm selesai (14:40)', '2026-11-28', '14:40', [mkRes('2026-11-28', '13:00', '15:00')], 'AKAN_TERSEDIA'],
+      ['lusa ruangan sebagian tepat selesai (15:00)', '2026-11-28', '15:00', [mkRes('2026-11-28', '13:00', '15:00')], 'TERSEDIA'],
+      ['tanggal lampau (2026-11-20) jam 10:00 ada reservasi', '2026-11-20', '10:00', [mkRes('2026-11-20', '09:00', '12:00')], 'SEDANG_DIGUNAKAN'],
+      ['tanggal lampau (2026-11-20) ruangan kosong', '2026-11-20', '10:00', [], 'TERSEDIA'],
+      ['besok filter date tanpa time (ref jam 10:00) penuh', '2026-11-27', undefined, [mkRes('2026-11-27', '08:00', '17:00')], 'SEDANG_DIGUNAKAN'],
+      ['lusa filter date tanpa time ruangan kosong', '2026-11-28', undefined, [], 'TERSEDIA'],
+    ])('skenario %s menghasilkan status %s', async (_desc, filterDate, filterTime, reservations, expectedStatus) => {
+      mockFindMany.mockResolvedValue([buildFacilityWithReservations(reservations)]);
+
+      const result = await facilityService.list({
+        date: filterDate,
+        ...(filterTime ? { time: filterTime } : {}),
+      });
+
+      expect(result[0].Status).toBe(expectedStatus);
+    });
+  });
 });
