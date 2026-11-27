@@ -201,4 +201,56 @@ describe('US-3: Reservasi Ruangan', () => {
       reservationService.update(1, 1, { Purpose: 'Coba ubah' })
     ).rejects.toThrow('CANNOT_EDIT');
   });
+
+  describe('Regression Fix #16: Validasi tanggal reservasi bebas bug timezone', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    test('reservasi_hari_ini_pukul_05_pagi_diterima_tidak_kena_DATE_IN_PAST', async () => {
+      jest.useFakeTimers().setSystemTime(new Date(2026, 10, 26, 5, 0, 0)); // 26 Nov 2026 05:00 lokal
+
+      mockFacilityFindUnique.mockResolvedValue({ Id: 1, Capacity: 20 });
+      mockReservationFindFirst.mockResolvedValue(null);
+      mockReservationCreate.mockResolvedValue({
+        Id: 10, UserId: 1, FacilityId: 1,
+        Date: new Date('2026-11-26'),
+        StartTime: new Date('2026-11-26T09:00:00'),
+        EndTime: new Date('2026-11-26T11:00:00'),
+        ActualEndTime: null, PartySize: 5, Purpose: 'Rapat pagi',
+        Status: 'UPCOMING', CreatedAt: new Date(),
+        Facility: { Name: 'Ruang Diskusi 301', Building: { Name: 'Gedung A' } },
+        User: { Id: 1, Name: 'Budi' },
+      });
+
+      const result = await reservationService.create({
+        UserId: 1,
+        FacilityId: 1,
+        Date: '2026-11-26',
+        StartTime: '09:00',
+        EndTime: '11:00',
+        PartySize: 5,
+        Purpose: 'Rapat pagi',
+      });
+
+      expect(result.Id).toBe(10);
+      expect(result.Status).toBe('UPCOMING');
+    });
+
+    test('reservasi_kemarin_tetap_ditolak_dengan_DATE_IN_PAST', async () => {
+      jest.useFakeTimers().setSystemTime(new Date(2026, 10, 26, 5, 0, 0));
+      mockFacilityFindUnique.mockResolvedValue({ Id: 1, Capacity: 20 });
+
+      await expect(
+        reservationService.create({
+          UserId: 1,
+          FacilityId: 1,
+          Date: '2026-11-25',
+          StartTime: '09:00',
+          EndTime: '11:00',
+          PartySize: 5,
+        })
+      ).rejects.toThrow('DATE_IN_PAST');
+    });
+  });
 });

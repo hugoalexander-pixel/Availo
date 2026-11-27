@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { FacilityService } from '../services/facilityService';
+import { FacilityService, CapacityConflictError } from '../services/facilityService';
 import { FacilityType } from '@prisma/client';
 
 const facilityService = new FacilityService();
@@ -14,11 +14,27 @@ export class FacilityController {
         search: req.query.search as string | undefined,
         date: req.query.date as string | undefined,
         time: req.query.time as string | undefined,
+        page: req.query.page,
+        limit: req.query.limit,
       };
 
-      const facilities = await facilityService.list(filters);
-      res.json({ Data: facilities, Total: facilities.length, Message: 'Data fasilitas berhasil dimuat.' });
-    } catch {
+      const { items, pagination } = await facilityService.listPaginated(filters);
+      if (pagination) {
+        res.json({
+          Data: items,
+          Total: pagination.total,
+          Pagination: pagination,
+          Message: 'Data fasilitas berhasil dimuat.',
+        });
+        return;
+      }
+
+      res.json({ Data: items, Total: items.length, Message: 'Data fasilitas berhasil dimuat.' });
+    } catch (err: any) {
+      if (err?.message === 'INVALID_PAGINATION') {
+        res.status(400).json({ Message: 'Parameter pagination (page/limit) harus berupa bilangan bulat positif.' });
+        return;
+      }
       res.status(500).json({ Message: 'Gagal memuat data fasilitas.' });
     }
   }
@@ -51,7 +67,21 @@ export class FacilityController {
       const id = Number(req.params.Id);
       const facility = await facilityService.update(id, req.body);
       res.json({ Data: facility, Message: 'Fasilitas berhasil diperbarui.' });
-    } catch {
+    } catch (err: any) {
+      if (err instanceof CapacityConflictError) {
+        res.status(409).json({
+          Message: `Tidak dapat menurunkan kapasitas menjadi ${err.newCapacity} karena terdapat reservasi aktif dengan ${err.maxPartySize} peserta.`,
+        });
+        return;
+      }
+      if (err?.message === 'INVALID_CAPACITY') {
+        res.status(400).json({ Message: 'Kapasitas fasilitas harus berupa bilangan bulat minimal 1.' });
+        return;
+      }
+      if (err?.message === 'FACILITY_NOT_FOUND') {
+        res.status(404).json({ Message: 'Fasilitas tidak ditemukan.' });
+        return;
+      }
       res.status(500).json({ Message: 'Gagal memperbarui fasilitas.' });
     }
   }

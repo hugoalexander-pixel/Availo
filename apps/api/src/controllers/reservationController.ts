@@ -78,9 +78,29 @@ export class ReservationController {
   async getMyReservations(req: Request, res: Response) {
     try {
       const status = req.query.status as string | undefined;
-      const reservations = await reservationService.getMyReservations(req.user!.UserId, status);
-      res.json({ Data: reservations, Total: reservations.length, Message: 'Data reservasi berhasil dimuat.' });
-    } catch {
+      const { items, pagination } = await reservationService.getMyReservationsPaginated(
+        req.user!.UserId,
+        status,
+        req.query.page,
+        req.query.limit
+      );
+
+      if (pagination) {
+        res.json({
+          Data: items,
+          Total: pagination.total,
+          Pagination: pagination,
+          Message: 'Data reservasi berhasil dimuat.',
+        });
+        return;
+      }
+
+      res.json({ Data: items, Total: items.length, Message: 'Data reservasi berhasil dimuat.' });
+    } catch (err: any) {
+      if (err?.message === 'INVALID_PAGINATION') {
+        res.status(400).json({ Message: 'Parameter pagination (page/limit) harus berupa bilangan bulat positif.' });
+        return;
+      }
       res.status(500).json({ Message: 'Gagal memuat data reservasi.' });
     }
   }
