@@ -1,8 +1,20 @@
 import prisma from '../utils/prisma';
 import { FacilityType, ReservationStatus } from '@prisma/client';
 import { calculateFacilityStatus, FacilityStatus } from '../utils/statusCalculator';
-import { buildReferenceDate } from '../utils/dateHelper';
+import { buildReferenceDate, formatLocalDate } from '../utils/dateHelper';
 import { parsePaginationParams, buildPaginationMeta, PaginationMeta } from '../utils/pagination';
+
+export class CapacityConflictError extends Error {
+  public readonly maxPartySize: number;
+  public readonly newCapacity: number;
+
+  constructor(maxPartySize: number, newCapacity: number) {
+    super('CAPACITY_CONFLICT');
+    this.name = 'CapacityConflictError';
+    this.maxPartySize = maxPartySize;
+    this.newCapacity = newCapacity;
+  }
+}
 
 export interface FacilityListFilters {
   buildingId?: number;
@@ -196,6 +208,36 @@ export class FacilityService {
     Description?: string;
     ImageUrl?: string;
   }) {
+    if (data.Capacity !== undefined) {
+      if (typeof data.Capacity !== 'number' || !Number.isInteger(data.Capacity) || data.Capacity < 1) {
+        throw new Error('INVALID_CAPACITY');
+      }
+
+      const existing = await prisma.facility.findUnique({ where: { Id: id } });
+      if (!existing) {
+        throw new Error('FACILITY_NOT_FOUND');
+      }
+
+      const todayStart = new Date(formatLocalDate(new Date()));
+      const activeReservations = await prisma.reservation.findMany({
+        where: {
+          FacilityId: id,
+          Status: { in: [ReservationStatus.UPCOMING, ReservationStatus.ACTIVE] },
+          Date: { gte: todayStart },
+        },
+        select: { Id: true, PartySize: true },
+      });
+
+      const maxPartySize = activeReservations.reduce(
+        (max, r) => (r.PartySize > max ? r.PartySize : max),
+        0
+      );
+
+      if (maxPartySize > data.Capacity) {
+        throw new CapacityConflictError(maxPartySize, data.Capacity);
+      }
+    }
+
     await prisma.facility.update({ where: { Id: id }, data });
     return this.getById(id);
   }
