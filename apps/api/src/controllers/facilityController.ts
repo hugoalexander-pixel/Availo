@@ -14,11 +14,27 @@ export class FacilityController {
         search: req.query.search as string | undefined,
         date: req.query.date as string | undefined,
         time: req.query.time as string | undefined,
+        page: req.query.page,
+        limit: req.query.limit,
       };
 
-      const facilities = await facilityService.list(filters);
-      res.json({ Data: facilities, Total: facilities.length, Message: 'Data fasilitas berhasil dimuat.' });
-    } catch {
+      const { items, pagination } = await facilityService.listPaginated(filters);
+      if (pagination) {
+        res.json({
+          Data: items,
+          Total: pagination.total,
+          Pagination: pagination,
+          Message: 'Data fasilitas berhasil dimuat.',
+        });
+        return;
+      }
+
+      res.json({ Data: items, Total: items.length, Message: 'Data fasilitas berhasil dimuat.' });
+    } catch (err: any) {
+      if (err?.message === 'INVALID_PAGINATION') {
+        res.status(400).json({ Message: 'Parameter pagination (page/limit) harus berupa bilangan bulat positif.' });
+        return;
+      }
       res.status(500).json({ Message: 'Gagal memuat data fasilitas.' });
     }
   }

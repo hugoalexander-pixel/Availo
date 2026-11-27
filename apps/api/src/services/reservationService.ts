@@ -1,6 +1,7 @@
 import prisma from '../utils/prisma';
 import { ReservationStatus, NotificationType } from '@prisma/client';
 import { isDateInPast } from '../utils/dateHelper';
+import { parsePaginationParams, buildPaginationMeta, PaginationMeta } from '../utils/pagination';
 
 export class ReservationService {
   async create(data: {
@@ -67,7 +68,7 @@ export class ReservationService {
     return this.formatReservation(reservation);
   }
 
-  async getMyReservations(userId: number, status?: string) {
+  private buildMyReservationsWhere(userId: number, status?: string) {
     const where: any = { UserId: userId };
 
     if (status === 'active') {
@@ -75,6 +76,12 @@ export class ReservationService {
     } else if (status === 'history') {
       where.Status = { in: [ReservationStatus.COMPLETED, ReservationStatus.CANCELLED, ReservationStatus.EARLY_ENDED] };
     }
+
+    return where;
+  }
+
+  async getMyReservations(userId: number, status?: string) {
+    const where = this.buildMyReservationsWhere(userId, status);
 
     const reservations = await prisma.reservation.findMany({
       where,
@@ -86,6 +93,39 @@ export class ReservationService {
     });
 
     return reservations.map((r) => this.formatReservation(r));
+  }
+
+  async getMyReservationsPaginated(
+    userId: number,
+    status?: string,
+    page?: unknown,
+    limit?: unknown
+  ): Promise<{ items: any[]; pagination: PaginationMeta | null }> {
+    const pagination = parsePaginationParams(page, limit);
+    if (!pagination) {
+      const items = await this.getMyReservations(userId, status);
+      return { items, pagination: null };
+    }
+
+    const where = this.buildMyReservationsWhere(userId, status);
+    const [reservations, total] = await Promise.all([
+      prisma.reservation.findMany({
+        where,
+        include: {
+          Facility: { include: { Building: true } },
+          User: { select: { Id: true, Name: true } },
+        },
+        orderBy: { StartTime: 'desc' },
+        skip: pagination.skip,
+        take: pagination.take,
+      }),
+      prisma.reservation.count({ where }),
+    ]);
+
+    return {
+      items: reservations.map((r) => this.formatReservation(r)),
+      pagination: buildPaginationMeta(total, pagination.page, pagination.limit),
+    };
   }
 
   async getById(id: number) {

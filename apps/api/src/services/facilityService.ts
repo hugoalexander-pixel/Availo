@@ -2,22 +2,55 @@ import prisma from '../utils/prisma';
 import { FacilityType, ReservationStatus } from '@prisma/client';
 import { calculateFacilityStatus, FacilityStatus } from '../utils/statusCalculator';
 import { buildReferenceDate } from '../utils/dateHelper';
+import { parsePaginationParams, buildPaginationMeta, PaginationMeta } from '../utils/pagination';
+
+export interface FacilityListFilters {
+  buildingId?: number;
+  type?: FacilityType;
+  minCapacity?: number;
+  search?: string;
+  date?: string;
+  time?: string;
+  page?: unknown;
+  limit?: unknown;
+}
 
 export class FacilityService {
-  async list(filters: {
-    buildingId?: number;
-    type?: FacilityType;
-    minCapacity?: number;
-    search?: string;
-    date?: string;
-    time?: string;
-  }) {
+  private buildListWhere(filters: FacilityListFilters) {
     const where: any = {};
 
     if (filters.buildingId) where.BuildingId = filters.buildingId;
     if (filters.type) where.Type = filters.type;
     if (filters.minCapacity) where.Capacity = { gte: filters.minCapacity };
     if (filters.search) where.Name = { contains: filters.search, mode: 'insensitive' };
+
+    return where;
+  }
+
+  private formatFacilityListItem(f: any, referenceDate: Date) {
+    const status = calculateFacilityStatus(f.Reservations, referenceDate);
+    return {
+      Id: f.Id,
+      Name: f.Name,
+      Type: f.Type,
+      Capacity: f.Capacity,
+      Floor: f.Floor,
+      Description: f.Description,
+      ImageUrl: f.ImageUrl,
+      Building: { Id: f.Building.Id, Name: f.Building.Name, Code: f.Building.Code },
+      Amenities: f.Amenities.map((fa: any) => ({
+        Id: fa.Amenity.Id,
+        Name: fa.Amenity.Name,
+        Icon: fa.Amenity.Icon,
+      })),
+      Status: status,
+    };
+  }
+
+  async list(filters: FacilityListFilters) {
+    const where = this.buildListWhere(filters);
+    const now = new Date();
+    const referenceDate = buildReferenceDate(filters.date, filters.time, now);
 
     const facilities = await prisma.facility.findMany({
       where,
@@ -34,28 +67,44 @@ export class FacilityService {
       orderBy: { Name: 'asc' },
     });
 
-    const referenceDate = buildReferenceDate(filters.date, filters.time, new Date());
-    const result = facilities.map((f) => {
-      const status = calculateFacilityStatus(f.Reservations, referenceDate);
-      return {
-        Id: f.Id,
-        Name: f.Name,
-        Type: f.Type,
-        Capacity: f.Capacity,
-        Floor: f.Floor,
-        Description: f.Description,
-        ImageUrl: f.ImageUrl,
-        Building: { Id: f.Building.Id, Name: f.Building.Name, Code: f.Building.Code },
-        Amenities: f.Amenities.map((fa) => ({
-          Id: fa.Amenity.Id,
-          Name: fa.Amenity.Name,
-          Icon: fa.Amenity.Icon,
-        })),
-        Status: status,
-      };
-    });
+    return facilities.map((f) => this.formatFacilityListItem(f, referenceDate));
+  }
 
-    return result;
+  async listPaginated(filters: FacilityListFilters): Promise<{ items: any[]; pagination: PaginationMeta | null }> {
+    const pagination = parsePaginationParams(filters.page, filters.limit);
+    if (!pagination) {
+      const items = await this.list(filters);
+      return { items, pagination: null };
+    }
+
+    const where = this.buildListWhere(filters);
+    const now = new Date();
+    const referenceDate = buildReferenceDate(filters.date, filters.time, now);
+
+    const [facilities, total] = await Promise.all([
+      prisma.facility.findMany({
+        where,
+        include: {
+          Building: true,
+          Amenities: { include: { Amenity: true } },
+          Reservations: {
+            where: {
+              Status: { in: [ReservationStatus.UPCOMING, ReservationStatus.ACTIVE] },
+              Date: filters.date ? new Date(filters.date) : undefined,
+            },
+          },
+        },
+        orderBy: { Name: 'asc' },
+        skip: pagination.skip,
+        take: pagination.take,
+      }),
+      prisma.facility.count({ where }),
+    ]);
+
+    return {
+      items: facilities.map((f) => this.formatFacilityListItem(f, referenceDate)),
+      pagination: buildPaginationMeta(total, pagination.page, pagination.limit),
+    };
   }
 
   async getById(id: number) {
